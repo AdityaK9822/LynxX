@@ -16,7 +16,9 @@ import {
   CheckCircle2,
   FileCheck
 } from "lucide-react";
+
 import logoImg from "../../media/LynxX.png";
+import mainBG from "../../media/mainBG.png";
 
 function ClaimContent() {
   const searchParams = useSearchParams();
@@ -57,37 +59,45 @@ function ClaimContent() {
     addr.length > 14 ? `${addr.slice(0, 6)}...${addr.slice(-6)}` : addr;
 
   return (
-    <div className="claim-page-wrapper relative overflow-hidden min-h-screen bg-black text-white flex flex-col justify-between">
-      {/* Ambient background glow orbs matching LynxX landing theme */}
-      <div className="lp-orb lp-orb-1" />
-      <div className="lp-orb lp-orb-2" />
+    <section 
+      className="lp-hero-section min-h-screen flex flex-col justify-between"
+      style={{ position: 'relative', background: '#000' }}
+    >
+      {/* 3D Fluid Glass Background matching LynxX Home page */}
+      <Image
+        src={mainBG}
+        alt=""
+        fill
+        priority
+        aria-hidden="true"
+        style={{ objectFit: 'cover', objectPosition: 'center', zIndex: 0 }}
+        quality={85}
+      />
 
-      {/* Header with LynxX Logo matching Home page placement */}
-      <header className="claim-header-nav w-full py-6 px-6 relative z-20">
-        <nav className="cf-nav max-w-6xl mx-auto flex items-center justify-between">
-          <div className="cf-nav-left">
-            <div className="cf-nav-brand">
-              <Link href="/" title="Return to LynxX Home">
-                <Image 
-                  className="cf-nav-logo cursor-pointer hover:opacity-90 transition-opacity" 
-                  src={logoImg} 
-                  alt="LynxX logo" 
-                  width={120} 
-                  height={36} 
-                  priority 
-                  style={{ height: "36px", width: "auto" }} 
-                />
-              </Link>
-            </div>
+      {/* Navigation Header - Pixel-perfect match with Home Page navbar */}
+      <nav className="cf-nav" style={{ position: 'relative', zIndex: 10 }}>
+        <div className="cf-nav-left">
+          <div className="cf-nav-brand">
+            <Link href="/" title="Return to LynxX Home">
+              <Image 
+                className="cf-nav-logo" 
+                src={logoImg} 
+                alt="LynxX logo" 
+                width={120} 
+                height={36} 
+                priority 
+                style={{ cursor: 'pointer', height: '36px', width: 'auto' }} 
+              />
+            </Link>
           </div>
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {/* Main Content Area */}
-      <main className="claim-main-content relative z-20 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
+      <main className="claim-main-content relative z-10 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {isValidLink ? (
           /* Valid Escrow Claim Card */
-          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
+          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-black/40 border border-white/10 backdrop-blur-2xl shadow-2xl">
             {/* Sender Pill */}
             {fromAddress && (
               <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/[0.04] border border-white/10 text-xs">
@@ -181,7 +191,7 @@ function ClaimContent() {
           </div>
         ) : (
           /* Malformed / Missing Parameters Error State View */
-          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 md:p-10 text-center rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
+          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 md:p-10 text-center rounded-3xl bg-black/40 border border-white/10 backdrop-blur-2xl shadow-2xl">
             <div className="error-icon-wrapper w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={32} className="text-amber-400" />
             </div>
@@ -212,10 +222,10 @@ function ClaimContent() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="w-full py-6 text-center text-xs text-white/30 relative z-20">
+      <footer className="w-full py-6 text-center text-xs text-white/30 relative z-10">
         LynxX Non-Custodial Smart Escrow Protocol
       </footer>
-    </div>
+    </section>
   );
 }
 
