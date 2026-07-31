@@ -132,20 +132,25 @@ export default function OnboardingModal({ onClose }) {
                 {s.showPasskeyOption && (
                     <div className="onboard-passkey-card">
                         <div className="passkey-card-header">
-                            <Fingerprint size={20} className="text-cyan-400" />
-                            <span>Seedless Passkey Registration</span>
+                            <div className="passkey-icon-glow">
+                                <Fingerprint size={22} className="text-cyan-400" />
+                            </div>
+                            <div className="passkey-header-text">
+                                <h4 className="passkey-title">Seedless Passkey Registration</h4>
+                                <p className="passkey-sub">Sign up instantly using FaceID, TouchID, or security keys</p>
+                            </div>
                         </div>
 
                         {passkeyRegisteredId ? (
                             <div className="passkey-saved-badge">
-                                <CheckCircle size={16} className="text-emerald-400" />
-                                <span>Passkey Saved ({passkeyRegisteredId.slice(0, 10)}...)</span>
+                                <CheckCircle size={16} className="text-emerald-400 flex-shrink-0" />
+                                <span className="truncate">Passkey Active ({passkeyRegisteredId.slice(0, 12)}...)</span>
                             </div>
                         ) : (
                             <button
                                 id="btn-create-passkey"
                                 type="button"
-                                className="btn btn-gradient btn-full btn-passkey"
+                                className="btn-passkey-gradient"
                                 onClick={handleCreatePasskey}
                                 disabled={isRegistering}
                             >
@@ -156,7 +161,7 @@ export default function OnboardingModal({ onClose }) {
                                     </>
                                 ) : (
                                     <>
-                                        <Key size={16} />
+                                        <Key size={18} />
                                         <span>Create account with Passkey</span>
                                     </>
                                 )}
@@ -165,7 +170,7 @@ export default function OnboardingModal({ onClose }) {
 
                         {errorMessage && (
                             <div className="passkey-error-msg">
-                                <AlertCircle size={14} />
+                                <AlertCircle size={14} className="flex-shrink-0" />
                                 <span>{errorMessage}</span>
                             </div>
                         )}
