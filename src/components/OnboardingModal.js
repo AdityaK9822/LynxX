@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
+import { toast as sonnerToast } from "sonner";
+import { Key, Fingerprint, CheckCircle, AlertCircle } from "lucide-react";
+import { createPasskey, isPasskeySupported, getSavedPasskeyId } from "../lib/passkey";
 
 const STEPS = [
     {
         icon: "🚀",
         title: "Welcome to LynxX",
-        desc: "The non-custodial dApp for instant payments and on-chain crowdfunding on the Stellar blockchain. Let's get you set up in 4 quick steps.",
+        desc: "The non-custodial dApp for instant payments and on-chain crowdfunding on the Stellar blockchain. Let's get you set up in quick steps.",
         action: null,
         actionLabel: null,
+        showPasskeyOption: true,
     },
     {
         icon: "🦋",
@@ -43,10 +47,17 @@ const STORAGE_KEY = "sf_onboarded_v1";
 export default function OnboardingModal({ onClose }) {
     const [step, setStep] = useState(0);
     const [visible, setVisible] = useState(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [passkeyRegisteredId, setPasskeyRegisteredId] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
 
     useEffect(() => {
-        // Fade-in on mount
+        // Fade-in on mount & check for previously saved passkey
         const t = setTimeout(() => setVisible(true), 50);
+        const savedId = getSavedPasskeyId();
+        if (savedId) {
+            setPasskeyRegisteredId(savedId);
+        }
         return () => clearTimeout(t);
     }, []);
 
@@ -62,6 +73,32 @@ export default function OnboardingModal({ onClose }) {
     };
 
     const prev = () => { if (step > 0) setStep(s => s - 1); };
+
+    const handleCreatePasskey = async () => {
+        setErrorMessage(null);
+        if (!isPasskeySupported()) {
+            const msg = "Passkeys (WebAuthn) are not supported on this device or browser.";
+            setErrorMessage(msg);
+            sonnerToast.error(msg);
+            return;
+        }
+
+        setIsRegistering(true);
+        try {
+            const res = await createPasskey("user@lynxx.app");
+            if (res.success) {
+                setPasskeyRegisteredId(res.credentialID);
+                sonnerToast.success("Passkey account registered successfully!");
+            }
+        } catch (err) {
+            console.error("Passkey registration failed:", err);
+            const msg = err.message || "Failed to create passkey.";
+            setErrorMessage(msg);
+            sonnerToast.error(msg);
+        } finally {
+            setIsRegistering(false);
+        }
+    };
 
     const s = STEPS[step];
 
@@ -88,6 +125,50 @@ export default function OnboardingModal({ onClose }) {
                 {/* Content */}
                 <h2 className="onboard-title">{s.title}</h2>
                 <p className="onboard-desc">{s.desc}</p>
+
+                {/* WebAuthn Passkey Registration Option on Welcome Step */}
+                {s.showPasskeyOption && (
+                    <div className="onboard-passkey-card">
+                        <div className="passkey-card-header">
+                            <Fingerprint size={20} className="text-cyan-400" />
+                            <span>Seedless Passkey Registration</span>
+                        </div>
+
+                        {passkeyRegisteredId ? (
+                            <div className="passkey-saved-badge">
+                                <CheckCircle size={16} className="text-emerald-400" />
+                                <span>Passkey Saved ({passkeyRegisteredId.slice(0, 10)}...)</span>
+                            </div>
+                        ) : (
+                            <button
+                                id="btn-create-passkey"
+                                type="button"
+                                className="btn btn-gradient btn-full btn-passkey"
+                                onClick={handleCreatePasskey}
+                                disabled={isRegistering}
+                            >
+                                {isRegistering ? (
+                                    <>
+                                        <span className="spinner"></span>
+                                        <span>Authorizing Biometrics...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Key size={16} />
+                                        <span>Create account with Passkey</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+
+                        {errorMessage && (
+                            <div className="passkey-error-msg">
+                                <AlertCircle size={14} />
+                                <span>{errorMessage}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* External action */}
                 {s.action && (

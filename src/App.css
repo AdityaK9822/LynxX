@@ -2803,4 +2803,67 @@ body {
     transform: translateY(0);
 }
 
+/* ════════════════════════════════════════
+   WEBAUTHN PASSKEY ONBOARDING STYLES
+════════════════════════════════════════ */
+.onboard-passkey-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.passkey-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    letter-spacing: -0.01em;
+}
+
+.btn-passkey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.passkey-saved-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    color: #34d399;
+    font-size: 0.78rem;
+    font-family: monospace;
+    padding: 8px 14px;
+    border-radius: 100px;
+}
+
+.passkey-error-msg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fbbf24;
+    font-size: 0.75rem;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    padding: 6px 12px;
+    border-radius: 8px;
+}
+
+
 
