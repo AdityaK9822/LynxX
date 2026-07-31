@@ -85,8 +85,11 @@ export default function CreateEscrow({ address }) {
     if (!generatedLink) return;
     navigator.clipboard.writeText(generatedLink.url);
     setCopied(true);
-    sonnerToast.success("Escrow link copied to clipboard!");
+    sonnerToast.success("Escrow link copied! Opening claim page...");
     setTimeout(() => setCopied(false), 2500);
+    if (typeof window !== "undefined") {
+      window.open(generatedLink.url, "_blank");
+    }
   };
 
   const handleReset = () => {
@@ -94,7 +97,7 @@ export default function CreateEscrow({ address }) {
     setAmount("");
     setRecipient("");
     setTitle("");
-    setCopied(false);
+    setIsGenerating(false);
   };
 
   return (
@@ -360,27 +363,16 @@ export default function CreateEscrow({ address }) {
                   className="btn btn-gradient btn-full mb-12"
                   onClick={handleCopyLink}
                 >
-                  {copied ? "Copied to Clipboard!" : "Copy Escrow Link"}
+                  {copied ? "Copied & Opening..." : "Copy Escrow Link"}
                 </button>
-                <div className="flex gap-2">
-                  <a
-                    href={generatedLink.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-glass-secondary flex-1 text-xs justify-center"
-                    title="Open Claim Page in new tab"
-                  >
-                    <ExternalLink size={14} /> Open Page
-                  </a>
-                  <button
-                    type="button"
-                    className="btn btn-glass-secondary flex-1 text-xs justify-center"
-                    onClick={handleReset}
-                    title="Create Another Escrow"
-                  >
-                    <RefreshCw size={14} /> Create Another
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-glass-secondary btn-full text-xs justify-center"
+                  onClick={handleReset}
+                  title="Create Another Escrow"
+                >
+                  <RefreshCw size={14} /> Create Another Escrow
+                </button>
               </div>
             </div>
           ) : (
