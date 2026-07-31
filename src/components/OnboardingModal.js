@@ -89,10 +89,12 @@ export default function OnboardingModal({ onClose }) {
             if (res.success) {
                 setPasskeyRegisteredId(res.credentialID);
                 sonnerToast.success("Passkey account registered successfully!");
+            } else {
+                setErrorMessage(res.error);
+                sonnerToast.error(res.error);
             }
         } catch (err) {
-            console.error("Passkey registration failed:", err);
-            const msg = err.message || "Failed to create passkey.";
+            const msg = err?.message || "Failed to create passkey.";
             setErrorMessage(msg);
             sonnerToast.error(msg);
         } finally {

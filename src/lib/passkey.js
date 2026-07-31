@@ -50,7 +50,10 @@ function bufferToHex(buffer) {
  */
 export async function createPasskey(username = "user@lynxx.app") {
   if (!isPasskeySupported()) {
-    throw new Error("Passkeys (WebAuthn) are not supported on this device or browser.");
+    return {
+      success: false,
+      error: "Passkeys (WebAuthn) are not supported on this device or browser.",
+    };
   }
 
   const userIdBytes = new Uint8Array(16);
@@ -88,7 +91,7 @@ export async function createPasskey(username = "user@lynxx.app") {
   try {
     const credential = await navigator.credentials.create(creationOptions);
     if (!credential) {
-      throw new Error("Failed to generate passkey credential.");
+      return { success: false, error: "Failed to generate passkey credential." };
     }
 
     const credentialID = credential.id || bufferToBase64Url(credential.rawId);
@@ -127,10 +130,15 @@ export async function createPasskey(username = "user@lynxx.app") {
       publicKey: publicKeyHex || "attestation_public_key_extracted",
     };
   } catch (err) {
+    let errorMsg = err.message || "Passkey authorization failed.";
     if (err.name === "NotAllowedError") {
-      throw new Error("Biometric authorization prompt was canceled or timed out.");
+      errorMsg = "Biometric authorization prompt was canceled or timed out.";
     }
-    throw err;
+    console.warn("Passkey registration prompt canceled or failed:", errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+    };
   }
 }
 
