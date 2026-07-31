@@ -60,7 +60,7 @@ function ClaimContent() {
 
   return (
     <section 
-      className="lp-hero-section min-h-screen flex flex-col justify-between"
+      className="lp-hero-section min-h-screen flex flex-col justify-between overflow-x-hidden"
       style={{ position: 'relative', background: '#000' }}
     >
       {/* 3D Fluid Glass Background matching LynxX Home page */}
@@ -96,13 +96,13 @@ function ClaimContent() {
       {/* Main Content Area */}
       <main className="claim-main-content relative z-10 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {isValidLink ? (
-          /* Valid Escrow Claim Card */
-          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-black/40 border border-white/10 backdrop-blur-2xl shadow-2xl">
+          /* Valid Escrow Claim Card with Dark Glass Opacity for Effortless Readability */
+          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-[#0a0b10]/90 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
             {/* Sender Pill */}
             {fromAddress && (
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/[0.04] border border-white/10 text-xs">
-                <span className="text-white/50">Sent by:</span>
-                <span className="font-mono text-white">{shortAddr(fromAddress)}</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full bg-white/[0.06] border border-white/15 text-xs">
+                <span className="text-slate-300">Sent by:</span>
+                <span className="font-mono text-white font-medium">{shortAddr(fromAddress)}</span>
               </div>
             )}
 
@@ -111,14 +111,14 @@ function ClaimContent() {
               You have been sent <span className="highlight-amt bg-gradient-to-r from-cyan-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">{amountNumber.toLocaleString()} {token}</span> in escrow.
             </h1>
 
-            <p className="text-white/50 text-sm mb-8">
+            <p className="text-slate-300 text-sm mb-8 font-medium">
               ≈ ${usdValue} USD locked in Soroban Smart Contract
             </p>
 
             {/* Contract ID Information Box */}
-            <div className="claim-contract-info-box p-4 mb-8 rounded-2xl bg-white/[0.02] border border-white/10">
+            <div className="claim-contract-info-box p-4 mb-8 rounded-2xl bg-black/60 border border-white/15">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-white/50 font-medium">Escrow Contract ID</span>
+                <span className="text-xs text-slate-300 font-medium">Escrow Contract ID</span>
                 <a 
                   href={`https://stellar.expert/explorer/testnet/contract/${contractId}`}
                   target="_blank"
@@ -128,9 +128,9 @@ function ClaimContent() {
                   Explorer <ExternalLink size={12} />
                 </a>
               </div>
-              <div className="link-output-box flex items-center justify-between gap-3 p-3 rounded-xl bg-black/60 border border-purple-500/30 font-mono text-xs overflow-hidden">
+              <div className="link-output-box flex items-center justify-between gap-3 p-3 rounded-xl bg-black/80 border border-purple-500/40 font-mono text-xs overflow-hidden">
                 <span className="text-purple-300 truncate flex-1 min-w-0">{contractId}</span>
-                <button type="button" className="btn-copy-icon text-white/60 hover:text-white p-1" onClick={handleCopyContract} title="Copy Contract ID">
+                <button type="button" className="btn-copy-icon text-white/70 hover:text-white p-1" onClick={handleCopyContract} title="Copy Contract ID">
                   {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                 </button>
               </div>
@@ -148,68 +148,68 @@ function ClaimContent() {
                 <span>Connect Wallet to Claim</span>
                 <ArrowRight size={18} strokeWidth={2.5} />
               </button>
-              <p className="text-xs text-white/40 text-center mt-3 flex items-center justify-center gap-1">
+              <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
                 <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
               </p>
             </div>
 
             {/* Systematic How Claiming Works Section */}
-            <div className="claim-explainer-box p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div className="claim-explainer-box p-5 rounded-2xl bg-black/60 border border-white/15">
               <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <span>Systematic Claiming Process</span>
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                <div className="process-step p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center">1</span>
-                    <Wallet size={14} className="text-white/40" />
+                    <span className="w-6 h-6 rounded-lg bg-cyan-500/25 text-cyan-300 font-bold text-xs flex items-center justify-center">1</span>
+                    <Wallet size={14} className="text-white/60" />
                   </div>
                   <h5 className="text-xs font-semibold text-white">Connect Wallet</h5>
-                  <p className="text-[11px] text-white/40 leading-relaxed">Sign in with your Freighter or Albedo Stellar wallet.</p>
+                  <p className="text-[11px] text-slate-300 leading-relaxed font-normal">Sign in with your Freighter or Albedo Stellar wallet.</p>
                 </div>
 
-                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                <div className="process-step p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center">2</span>
-                    <FileCheck size={14} className="text-white/40" />
+                    <span className="w-6 h-6 rounded-lg bg-purple-500/25 text-purple-300 font-bold text-xs flex items-center justify-center">2</span>
+                    <FileCheck size={14} className="text-white/60" />
                   </div>
                   <h5 className="text-xs font-semibold text-white">Verify Terms</h5>
-                  <p className="text-[11px] text-white/40 leading-relaxed">Review smart contract release parameters.</p>
+                  <p className="text-[11px] text-slate-300 leading-relaxed font-normal">Review smart contract release parameters.</p>
                 </div>
 
-                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                <div className="process-step p-3.5 rounded-xl bg-white/[0.04] border border-white/10 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center">3</span>
-                    <CheckCircle2 size={14} className="text-white/40" />
+                    <span className="w-6 h-6 rounded-lg bg-emerald-500/25 text-emerald-300 font-bold text-xs flex items-center justify-center">3</span>
+                    <CheckCircle2 size={14} className="text-white/60" />
                   </div>
                   <h5 className="text-xs font-semibold text-white">Instant Payout</h5>
-                  <p className="text-[11px] text-white/40 leading-relaxed">Funds unlock directly into your non-custodial wallet.</p>
+                  <p className="text-[11px] text-slate-300 leading-relaxed font-normal">Funds unlock directly into your non-custodial wallet.</p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
           /* Malformed / Missing Parameters Error State View */
-          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 md:p-10 text-center rounded-3xl bg-black/40 border border-white/10 backdrop-blur-2xl shadow-2xl">
+          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 md:p-10 text-center rounded-3xl bg-[#0a0b10]/90 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
             <div className="error-icon-wrapper w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={32} className="text-amber-400" />
             </div>
 
             <h1 className="text-xl font-bold text-white mb-3">Invalid or Expired Escrow Link</h1>
 
-            <p className="text-sm text-white/50 mb-6 leading-relaxed">
+            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
               This escrow link appears to be missing required parameters (contract ID or amount). Please verify the URL with the sender to obtain a valid claim link.
             </p>
 
-            <div className="error-details-box p-4 mb-6 rounded-2xl bg-white/[0.02] border border-white/10 text-left flex flex-col gap-2">
+            <div className="error-details-box p-4 mb-6 rounded-2xl bg-black/60 border border-white/15 text-left flex flex-col gap-2">
               <div className="summary-row flex justify-between text-xs">
-                <span className="text-white/40">Contract ID (c)</span>
-                <span className="font-mono text-amber-400">{contractId ? shortAddr(contractId) : "Missing"}</span>
+                <span className="text-slate-400">Contract ID (c)</span>
+                <span className="font-mono text-amber-400 font-medium">{contractId ? shortAddr(contractId) : "Missing"}</span>
               </div>
               <div className="summary-row flex justify-between text-xs">
-                <span className="text-white/40">Token Amount (amt)</span>
-                <span className="font-mono text-amber-400">{rawAmt || "Missing"}</span>
+                <span className="text-slate-400">Token Amount (amt)</span>
+                <span className="font-mono text-amber-400 font-medium">{rawAmt || "Missing"}</span>
               </div>
             </div>
 
@@ -222,7 +222,7 @@ function ClaimContent() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="w-full py-6 text-center text-xs text-white/30 relative z-10">
+      <footer className="w-full py-6 text-center text-xs text-slate-400 relative z-10 font-medium">
         LynxX Non-Custodial Smart Escrow Protocol
       </footer>
     </section>
