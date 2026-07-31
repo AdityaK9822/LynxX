@@ -22,40 +22,51 @@ export async function handlePullRequestReviewEvent(
     finalEmoji = "🟣";
     finalColor = "Approved";
   } else if (review.state === "changes_requested") {
-    finalAction = "changes requested";
+    finalAction = "requested changes";
     finalEmoji = "🟠";
     finalColor = "ChangesRequested";
   }
 
-  const eventId = `${context.id}-pr-review-${finalAction}`;
+  const eventId = `${context.id}-pr-review-${review.id}`;
 
   const fields = [
     {
-      name: "Repository",
+      name: "📁 Repository",
       value: `[${repository.full_name}](${repository.html_url})`,
       inline: true,
     },
     {
-      name: "Event Type",
-      value: `${finalEmoji} PR Review ${finalAction}`,
+      name: "🎯 Status",
+      value: `${finalEmoji} ${finalAction.charAt(0).toUpperCase() + finalAction.slice(1)}`,
       inline: true,
     },
   ];
+
+  if (review.body) {
+    fields.push({
+      name: "💬 Comment",
+      value: review.body.length > 200 ? review.body.substring(0, 197) + "..." : review.body,
+      inline: false,
+    });
+  }
 
   const embed: DiscordEmbed = {
     title: `#${pr.number} ${pr.title}`,
     url: review.html_url,
     color: getHexColor(finalColor),
     author: {
-      name: sender.login,
+      name: `${sender.login} ${finalAction} a PR`,
       url: sender.html_url,
       icon_url: sender.avatar_url,
     },
     fields,
+    footer: {
+      text: repository.full_name,
+    },
     timestamp: new Date().toISOString(),
   };
 
-  await sendDiscordNotification(eventId, { embeds: [embed] });
+  await sendDiscordNotification(eventId, { embeds: [embed] }, "pull_requests");
 }
 
 export async function handlePullRequestReviewRequestEvent(
@@ -73,12 +84,12 @@ export async function handlePullRequestReviewRequestEvent(
 
   const fields = [
     {
-      name: "Repository",
+      name: "📁 Repository",
       value: `[${repository.full_name}](${repository.html_url})`,
       inline: true,
     },
     {
-      name: "Event Type",
+      name: "🎯 Action",
       value: `${emoji} Review Requested`,
       inline: true,
     },
@@ -86,8 +97,8 @@ export async function handlePullRequestReviewRequestEvent(
 
   if (requestedReviewer) {
     fields.push({
-      name: "Reviewer",
-      value: requestedReviewer.login,
+      name: "👤 Reviewer",
+      value: `[${requestedReviewer.login}](${requestedReviewer.html_url})`,
       inline: true,
     });
   }
@@ -97,13 +108,16 @@ export async function handlePullRequestReviewRequestEvent(
     url: pr.html_url,
     color: getHexColor(colorName),
     author: {
-      name: sender.login,
+      name: `${sender.login} requested a review`,
       url: sender.html_url,
       icon_url: sender.avatar_url,
     },
     fields,
+    footer: {
+      text: repository.full_name,
+    },
     timestamp: new Date().toISOString(),
   };
 
-  await sendDiscordNotification(eventId, { embeds: [embed] });
+  await sendDiscordNotification(eventId, { embeds: [embed] }, "pull_requests");
 }

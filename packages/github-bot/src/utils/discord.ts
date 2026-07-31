@@ -26,19 +26,37 @@ export interface DiscordPayload {
   embeds: DiscordEmbed[];
 }
 
+export type WebhookCategory = 
+  | "general"
+  | "available_issues"
+  | "claimed_issues"
+  | "pull_requests"
+  | "completed";
+
 // Simple in-memory cache to prevent duplicate notifications
-// In production, you might want to use Redis
 const notificationCache = new Set<string>();
 
 export async function sendDiscordNotification(
   eventId: string,
-  payload: DiscordPayload
+  payload: DiscordPayload,
+  category: WebhookCategory = "general"
 ): Promise<void> {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  // Determine which webhook to use based on the category
+  let webhookUrl = process.env.DISCORD_WEBHOOK_GENERAL || process.env.DISCORD_WEBHOOK_URL;
+
+  if (category === "available_issues" && process.env.DISCORD_WEBHOOK_AVAILABLE_ISSUES) {
+    webhookUrl = process.env.DISCORD_WEBHOOK_AVAILABLE_ISSUES;
+  } else if (category === "claimed_issues" && process.env.DISCORD_WEBHOOK_CLAIMED_ISSUES) {
+    webhookUrl = process.env.DISCORD_WEBHOOK_CLAIMED_ISSUES;
+  } else if (category === "pull_requests" && process.env.DISCORD_WEBHOOK_PULL_REQUESTS) {
+    webhookUrl = process.env.DISCORD_WEBHOOK_PULL_REQUESTS;
+  } else if (category === "completed" && process.env.DISCORD_WEBHOOK_COMPLETED) {
+    webhookUrl = process.env.DISCORD_WEBHOOK_COMPLETED;
+  }
 
   if (!webhookUrl) {
     console.warn(
-      "DISCORD_WEBHOOK_URL is not set. Skipping Discord notification."
+      `No Webhook URL found for category '${category}' or general fallback. Skipping notification.`
     );
     return;
   }
@@ -58,10 +76,10 @@ export async function sendDiscordNotification(
       notificationCache.delete(eventId);
     }, 10 * 60 * 1000);
 
-    console.log(`[Discord Webhook] Successfully sent notification for event: ${eventId}`);
+    console.log(`[Discord Webhook] Successfully sent notification to '${category}' for event: ${eventId}`);
   } catch (error: any) {
     console.error(
-      `[Discord Webhook] Failed to send notification for event ${eventId}:`,
+      `[Discord Webhook] Failed to send notification to '${category}' for event ${eventId}:`,
       error.message
     );
   }
