@@ -12,7 +12,8 @@ import {
   Sparkles, 
   ArrowRight, 
   Info, 
-  RefreshCw 
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
 
 export default function CreateEscrow({ address }) {
@@ -65,11 +66,13 @@ export default function CreateEscrow({ address }) {
     // Simulate mock link generation UI response
     setTimeout(() => {
       const mockId = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 8);
-      const fakeUrl = `https://lynxx.app/escrow/esc_${mockId}`;
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
+      const mockContractId = `CCIYIE3WDF5EEC4DL25JR2O4SAV2G3USARIBMCLWPIFQVUOIVDEN5FWI`;
+      const fakeUrl = `${origin}/claim?c=${mockContractId}&amt=${amount}&token=${token}`;
       
       setGeneratedLink({
         url: fakeUrl,
-        id: `esc_${mockId}`,
+        id: mockContractId,
         details: formState,
       });
 
@@ -301,12 +304,22 @@ export default function CreateEscrow({ address }) {
               </p>
 
               <div className="link-output-box mb-20">
-                <span className="link-url-text">{generatedLink.url}</span>
+                <a
+                  href={generatedLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-url-text hover:underline"
+                  title="Click to open claim page"
+                >
+                  <span className="truncate">
+                    {origin}/claim?c={generatedLink.id.slice(0, 6)}...&amp;amt={generatedLink.details.amount}
+                  </span>
+                </a>
                 <button
                   type="button"
                   className="btn-copy-icon"
                   onClick={handleCopyLink}
-                  title="Copy link"
+                  title="Copy full link"
                 >
                   {copied ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                 </button>
@@ -335,28 +348,39 @@ export default function CreateEscrow({ address }) {
                 )}
                 <div className="summary-row">
                   <span className="summary-label">Counterparty</span>
-                  <span className="summary-value text-xs text-muted truncate max-w-[150px]">
+                  <span className="summary-value text-xs text-muted truncate max-w-[140px]">
                     {generatedLink.details.recipient}
                   </span>
                 </div>
               </div>
 
-              <div className="flex gap-12">
+              <div className="escrow-card-actions">
                 <button
                   type="button"
-                  className="btn btn-gradient flex-1"
+                  className="btn btn-gradient btn-full mb-12"
                   onClick={handleCopyLink}
                 >
-                  {copied ? "Copied!" : "Copy Link"}
+                  {copied ? "Copied to Clipboard!" : "Copy Escrow Link"}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-glass-secondary"
-                  onClick={handleReset}
-                  title="Create Another"
-                >
-                  <RefreshCw size={16} />
-                </button>
+                <div className="flex gap-2">
+                  <a
+                    href={generatedLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-glass-secondary flex-1 text-xs justify-center"
+                    title="Open Claim Page in new tab"
+                  >
+                    <ExternalLink size={14} /> Open Page
+                  </a>
+                  <button
+                    type="button"
+                    className="btn btn-glass-secondary flex-1 text-xs justify-center"
+                    onClick={handleReset}
+                    title="Create Another Escrow"
+                  >
+                    <RefreshCw size={14} /> Create Another
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
