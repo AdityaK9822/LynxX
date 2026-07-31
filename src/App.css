@@ -2330,6 +2330,18 @@ body {
     padding: 32px 24px 60px;
 }
 
+.escrow-field-label {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 16px;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .escrow-badge {
     display: inline-flex;
     align-items: center;

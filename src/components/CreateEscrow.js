@@ -7,16 +7,12 @@ import {
   Lock, 
   Clock, 
   UserCheck, 
-  Link2, 
   Copy, 
   Check, 
   Sparkles, 
   ArrowRight, 
   Info, 
-  ChevronDown, 
-  HelpCircle,
-  RefreshCw,
-  ExternalLink
+  RefreshCw 
 } from "lucide-react";
 
 export default function CreateEscrow({ address }) {
@@ -120,7 +116,7 @@ export default function CreateEscrow({ address }) {
           <form onSubmit={handleGenerateLink}>
             {/* Title / Description */}
             <div className="send-field mb-20">
-              <label className="flex justify-between items-center">
+              <label className="escrow-field-label">
                 <span>Escrow Title / Memo</span>
                 <span className="text-muted text-xs">Optional</span>
               </label>
@@ -137,7 +133,9 @@ export default function CreateEscrow({ address }) {
 
             {/* Token & Amount Input */}
             <div className="send-field mb-20">
-              <label>Deposit Token & Amount</label>
+              <label className="escrow-field-label">
+                <span>Deposit Token & Amount</span>
+              </label>
               <div className="escrow-amount-row">
                 <div className="send-input-wrap amount-wrap flex-1">
                   <input
@@ -170,7 +168,7 @@ export default function CreateEscrow({ address }) {
 
             {/* Counterparty / Recipient Address */}
             <div className="send-field mb-20">
-              <label className="flex justify-between items-center">
+              <label className="escrow-field-label">
                 <span>Counterparty Stellar Address</span>
                 <span className="text-muted text-xs">Optional (Default: Anyone with link)</span>
               </label>
