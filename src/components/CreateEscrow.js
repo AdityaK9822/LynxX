@@ -12,8 +12,7 @@ import {
   Sparkles, 
   ArrowRight, 
   Info, 
-  RefreshCw,
-  ExternalLink
+  RefreshCw 
 } from "lucide-react";
 
 export default function CreateEscrow({ address }) {
