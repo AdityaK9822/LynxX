@@ -29,7 +29,7 @@ function ClaimContent() {
   const fromAddress = searchParams.get("from") || "";
 
   const amountNumber = parseFloat(rawAmt);
-  const isValidAmount = !isNaN(amountNumber) && amountNumber > 0;
+  const isValidAmount = Number.isFinite(amountNumber) && amountNumber > 0;
   const isValidContract = contractId.trim().length > 0;
 
   const isValidLink = isValidAmount && isValidContract;
