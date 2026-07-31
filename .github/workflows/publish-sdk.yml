@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: pnpm config set ignore-scripts true && pnpm install
 
+      - name: Lint SDK
+        run: pnpm --filter lynxx-wallet-sdk run lint
+
+      - name: Test SDK
+        run: pnpm --filter lynxx-wallet-sdk run test
+
       - name: Build SDK
         run: pnpm --filter lynxx-wallet-sdk run build
 

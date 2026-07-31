@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
     Home, Send as SendIconLucide, Download, RefreshCw, Clock, Users, BarChart2, 
     Settings, ExternalLink, ArrowRight, Bell, LogOut, ChevronDown, ChevronRight, Eye, EyeOff, 
-    Copy as CopyIcon, QrCode, CreditCard, Layers, ArrowUpRight, ArrowDownLeft 
+    Copy as CopyIcon, QrCode, CreditCard, Layers, ArrowUpRight, ArrowDownLeft, ShieldCheck 
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,6 +34,7 @@ const MarketAnalytics = dynamic(() => import("./MarketAnalytics"), { ssr: false 
 const MultiChainSwap  = dynamic(() => import("./motion/swap").then(m => ({ default: m.MultiChainSwap })), { ssr: false });
 const UserInteractions = dynamic(() => import("./UserInteractions"), { ssr: false });
 const FeedbackForm     = dynamic(() => import("./FeedbackForm"),     { ssr: false });
+const CreateEscrow     = dynamic(() => import("./CreateEscrow"),     { ssr: false });
 
 // ── Image imports (used as src strings for Next.js <Image> / CSS) ──
 import mainBG       from "../media/mainBG.png";
@@ -788,6 +789,7 @@ function Header() {
                 <nav className="bento-nav">
                     <a href="#" className={`bento-nav-item ${activeView === 'home' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('home'); }}><Home size={20} /> Dashboard</a>
                     <a href="#" className={`bento-nav-item ${activeView === 'send' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('send'); }}><SendIconLucide size={20} /> Send</a>
+                    <a href="#" className={`bento-nav-item ${activeView === 'escrow' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('escrow'); }}><ShieldCheck size={20} /> Escrow</a>
                     <a href="#" className={`bento-nav-item ${activeView === 'receive' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('receive'); }}><Download size={20} /> Receive</a>
                     <a href="#" className={`bento-nav-item ${activeView === 'swap' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('swap'); }}><RefreshCw size={20} /> Swap</a>
                     <a href="#" className={`bento-nav-item ${activeView === 'activity' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('activity'); }}><Clock size={20} /> Activity</a>
@@ -922,6 +924,8 @@ function Header() {
                             )}
                         </div>
                     </div>
+                ) : activeView === 'escrow' ? (
+                    <CreateEscrow address={address} />
                 ) : activeView === 'swap' ? (
                     <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
                         <MultiChainSwap />

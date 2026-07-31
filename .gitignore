@@ -36,3 +36,4 @@ coverage/
 out/
 
 tsconfig.tsbuildinfo
+*.pem

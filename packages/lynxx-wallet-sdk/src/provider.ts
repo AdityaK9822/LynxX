@@ -1,221 +1,150 @@
-import {
-  isConnected as freighterIsConnected,
-  requestAccess as freighterRequestAccess,
-  signAuthEntry as freighterSignAuthEntry,
-  signTransaction as freighterSignTransaction,
-} from "@stellar/freighter-api";
-import { FeeBumpTransaction, Transaction, xdr } from "@stellar/stellar-sdk";
+import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
+import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
+import type { LynxxConfig, LynxxNetwork } from "./types";
 
-import {
-  InvalidXdrError,
-  SigningTimeoutError,
-  UserRejectedError,
-  WalletNotFoundError,
-  mapWalletError,
-} from "./errors";
-import type {
-  SignAuthEntryOptions,
-  SignedAuthEntryResult,
-  SignedTransactionResult,
-  SignTransactionOptions,
-  TransactionLike,
-  WalletClient,
-} from "./types";
-
-const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
-
-const defaultClient: WalletClient = {
-  isConnected: freighterIsConnected,
-  requestAccess: freighterRequestAccess,
-  signTransaction: freighterSignTransaction,
-  signAuthEntry: freighterSignAuthEntry,
+const NETWORK_PASSPHRASES: Record<LynxxNetwork, Networks> = {
+  TESTNET: Networks.TESTNET,
+  PUBLIC: Networks.PUBLIC,
 };
 
+/**
+ * Thrown when a wallet operation fails, e.g. the user closes the wallet
+ * selection modal, rejects a signing request, or no wallet is connected yet.
+ */
+export class LynxxWalletError extends Error {
+  /** Machine-readable error code, e.g. `"ModalClosed"` or `"SigningRejected"`. */
+  code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = "LynxxWalletError";
+    this.code = code;
+  }
+}
+
+/**
+ * Manages the connection to a user's Stellar wallet (Freighter, xBull,
+ * Albedo, and other wallets supported by `@creit.tech/stellar-wallets-kit`)
+ * and provides helpers for signing transactions.
+ *
+ * Use {@link initLynxx} to create an instance rather than constructing this
+ * class directly.
+ */
 export class LynxxWalletProvider {
-  private publicKey: string | null = null;
+  private readonly networkPassphrase: Networks;
+  private address: string | null = null;
 
-  constructor(private readonly client: WalletClient = defaultClient) {}
+  constructor(config: LynxxConfig = {}) {
+    const network = config.network ?? "TESTNET";
+    this.networkPassphrase = NETWORK_PASSPHRASES[network];
 
-  /** Whether `connect()` has previously succeeded in this session. */
-  get connected(): boolean {
-    return this.publicKey !== null;
-  }
-
-  /** The public key returned by the last successful `connect()` call, if any. */
-  get address(): string | null {
-    return this.publicKey;
-  }
-
-  /**
-   * Detects the Freighter extension and requests access to the user's
-   * public key.
-   */
-  async connect(): Promise<{ publicKey: string }> {
-    const connectedResult = await this.callWallet(
-      () => this.client.isConnected(),
-      "Failed to detect the Freighter wallet."
-    );
-
-    if (connectedResult.error || !connectedResult.isConnected) {
-      throw new WalletNotFoundError();
-    }
-
-    const accessResult = await this.callWallet(
-      () => this.client.requestAccess(),
-      "Failed to request wallet access."
-    );
-
-    if (accessResult.error || !accessResult.address) {
-      throw mapWalletError(
-        accessResult.error,
-        "The wallet denied access to an account."
-      );
-    }
-
-    this.publicKey = accessResult.address;
-    return { publicKey: this.publicKey };
-  }
-
-  /**
-   * Requests a signature for a Stellar transaction from the connected
-   * wallet. Accepts a raw XDR string or a `Transaction`/`FeeBumpTransaction`
-   * instance from `@stellar/stellar-sdk`.
-   */
-  async signTransaction(
-    transaction: TransactionLike,
-    opts: SignTransactionOptions = {}
-  ): Promise<SignedTransactionResult> {
-    const transactionXdr = toTransactionXdr(transaction);
-    const { timeoutMs = DEFAULT_TIMEOUT_MS, ...walletOpts } = opts;
-
-    const result = await this.withTimeout(
-      this.callWallet(
-        () => this.client.signTransaction(transactionXdr, walletOpts),
-        "The wallet failed to sign the transaction."
-      ),
-      timeoutMs
-    );
-
-    if (result.error) {
-      throw mapWalletError(
-        result.error,
-        "The wallet failed to sign the transaction."
-      );
-    }
-
-    if (!result.signedTxXdr) {
-      throw new UserRejectedError();
-    }
-
-    return {
-      signedTxXdr: result.signedTxXdr,
-      signerAddress: result.signerAddress,
-    };
-  }
-
-  /**
-   * Requests a signature for a Soroban `SorobanAuthorizationEntry`, used to
-   * authorize smart contract invocations on behalf of the connected account.
-   */
-  async signAuthEntry(
-    entryXdr: string,
-    opts: SignAuthEntryOptions = {}
-  ): Promise<SignedAuthEntryResult> {
-    assertValidAuthEntryXdr(entryXdr);
-    const { timeoutMs = DEFAULT_TIMEOUT_MS, ...walletOpts } = opts;
-
-    const result = await this.withTimeout(
-      this.callWallet(
-        () => this.client.signAuthEntry(entryXdr, walletOpts),
-        "The wallet failed to sign the authorization entry."
-      ),
-      timeoutMs
-    );
-
-    if (result.error) {
-      throw mapWalletError(
-        result.error,
-        "The wallet failed to sign the authorization entry."
-      );
-    }
-
-    if (!result.signedAuthEntry) {
-      throw new UserRejectedError();
-    }
-
-    return {
-      signedAuthEntry: result.signedAuthEntry,
-      signerAddress: result.signerAddress,
-    };
-  }
-
-  /** Runs a wallet call, normalizing thrown exceptions into LynxxWalletErrors. */
-  private async callWallet<T>(
-    fn: () => Promise<T>,
-    fallbackMessage: string
-  ): Promise<T> {
-    try {
-      return await fn();
-    } catch (error) {
-      throw mapWalletError(error, fallbackMessage);
-    }
-  }
-
-  private async withTimeout<T>(
-    promise: Promise<T>,
-    timeoutMs: number
-  ): Promise<T> {
-    if (!timeoutMs || timeoutMs <= 0) {
-      return promise;
-    }
-
-    let timer: ReturnType<typeof setTimeout>;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new SigningTimeoutError()), timeoutMs);
+    StellarWalletsKit.init({
+      network: this.networkPassphrase,
+      modules: defaultModules(),
     });
+  }
 
+  /**
+   * Opens the wallet-selection modal and connects to the user's chosen
+   * wallet.
+   *
+   * @returns The connected account's Stellar public key (`G...`).
+   * @throws {@link LynxxWalletError} `"ModalClosed"` if the user closes the
+   * modal without selecting a wallet, or approves without an address being
+   * returned.
+   *
+   * @example
+   * ```ts
+   * const wallet = initLynxx();
+   * const address = await wallet.connect();
+   * console.log(`Connected: ${address}`);
+   * ```
+   */
+  async connect(): Promise<string> {
     try {
-      return await Promise.race([promise, timeout]);
-    } finally {
-      clearTimeout(timer!);
+      const { address } = await StellarWalletsKit.authModal();
+      if (!address) {
+        throw new Error("No address returned from wallet.");
+      }
+      this.address = address;
+      return address;
+    } catch (error) {
+      throw new LynxxWalletError(
+        "ModalClosed",
+        error instanceof Error
+          ? error.message
+          : "Wallet connection was cancelled.",
+      );
     }
   }
-}
 
-function toTransactionXdr(transaction: TransactionLike): string {
-  if (typeof transaction === "string") {
-    assertValidTransactionXdr(transaction);
-    return transaction;
+  /**
+   * Signs a transaction with the connected wallet.
+   *
+   * @param xdr - The unsigned transaction, base64-encoded XDR (e.g. the
+   * result of `transaction.toXDR()` from `@stellar/stellar-sdk`).
+   * @returns The signed transaction as a base64-encoded XDR string.
+   * @throws {@link LynxxWalletError} `"NotConnected"` if {@link connect} has
+   * not been called yet, or `"SigningRejected"` if the user rejects the
+   * signing request in their wallet.
+   *
+   * @example
+   * ```ts
+   * import { TransactionBuilder, Networks } from "@stellar/stellar-sdk";
+   *
+   * const signedXdr = await wallet.signTransaction(transaction.toXDR());
+   * const signedTx = TransactionBuilder.fromXDR(signedXdr, Networks.TESTNET);
+   * ```
+   */
+  async signTransaction(xdr: string): Promise<string> {
+    if (!this.address) {
+      throw new LynxxWalletError(
+        "NotConnected",
+        "No wallet connected. Call connect() before signTransaction().",
+      );
+    }
+
+    try {
+      const { signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
+        networkPassphrase: this.networkPassphrase,
+        address: this.address,
+      });
+
+      if (!signedTxXdr) {
+        throw new Error("Wallet did not return a signed transaction.");
+      }
+
+      return signedTxXdr;
+    } catch (error) {
+      throw new LynxxWalletError(
+        "SigningRejected",
+        error instanceof Error
+          ? error.message
+          : "Transaction signing was rejected.",
+      );
+    }
   }
 
-  if (
-    transaction instanceof Transaction ||
-    transaction instanceof FeeBumpTransaction
-  ) {
-    return transaction.toXDR();
+  /**
+   * The currently connected wallet address.
+   * @returns The connected `G...` public key, or `null` if not connected.
+   */
+  getAddress(): string | null {
+    return this.address;
   }
 
-  throw new InvalidXdrError(
-    "signTransaction() expects an XDR string or a Transaction/FeeBumpTransaction instance."
-  );
-}
-
-function assertValidTransactionXdr(transactionXdr: string): void {
-  try {
-    xdr.TransactionEnvelope.fromXDR(transactionXdr, "base64");
-  } catch (error) {
-    throw new InvalidXdrError(
-      `Received a malformed transaction envelope XDR: ${(error as Error).message}`
-    );
+  /** Whether a wallet is currently connected. */
+  isConnected(): boolean {
+    return this.address !== null;
   }
-}
 
-function assertValidAuthEntryXdr(entryXdr: string): void {
-  try {
-    xdr.SorobanAuthorizationEntry.fromXDR(entryXdr, "base64");
-  } catch (error) {
-    throw new InvalidXdrError(
-      `Received a malformed SorobanAuthorizationEntry XDR: ${(error as Error).message}`
-    );
+  /**
+   * Clears the local connection state.
+   *
+   * This only forgets the address on the client; it does not revoke the
+   * dApp's permission from within the wallet itself.
+   */
+  disconnect(): void {
+    this.address = null;
   }
 }

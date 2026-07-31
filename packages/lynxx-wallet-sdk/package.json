@@ -31,6 +31,9 @@
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@creit.tech/stellar-wallets-kit": "^2.5.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stellar/stellar-sdk": "^15.1.0",
