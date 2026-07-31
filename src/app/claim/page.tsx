@@ -13,7 +13,6 @@ import {
   ArrowRight, 
   Wallet,
   Lock,
-  ArrowUpRight,
   CheckCircle2,
   FileCheck
 } from "lucide-react";
@@ -59,22 +58,29 @@ function ClaimContent() {
 
   return (
     <div className="claim-page-wrapper relative overflow-hidden min-h-screen bg-black text-white flex flex-col justify-between">
-      {/* Ambient background glow orbs */}
+      {/* Ambient background glow orbs matching LynxX landing theme */}
       <div className="lp-orb lp-orb-1" />
       <div className="lp-orb lp-orb-2" />
 
-      {/* Streamlined Header: LynxX Logo Only (Clicking navigates to Home) */}
-      <header className="w-full py-8 flex justify-center items-center relative z-20">
-        <Link href="/" title="Return to LynxX Home">
-          <Image 
-            src={logoImg} 
-            alt="LynxX Logo" 
-            width={140} 
-            height={42} 
-            priority 
-            className="h-10 w-auto cursor-pointer hover:opacity-85 transition-opacity" 
-          />
-        </Link>
+      {/* Header with LynxX Logo matching Home page placement */}
+      <header className="claim-header-nav w-full py-6 px-6 relative z-20">
+        <nav className="cf-nav max-w-6xl mx-auto flex items-center justify-between">
+          <div className="cf-nav-left">
+            <div className="cf-nav-brand">
+              <Link href="/" title="Return to LynxX Home">
+                <Image 
+                  className="cf-nav-logo cursor-pointer hover:opacity-90 transition-opacity" 
+                  src={logoImg} 
+                  alt="LynxX logo" 
+                  width={120} 
+                  height={36} 
+                  priority 
+                  style={{ height: "36px", width: "auto" }} 
+                />
+              </Link>
+            </div>
+          </div>
+        </nav>
       </header>
 
       {/* Main Content Area */}
@@ -120,17 +126,17 @@ function ClaimContent() {
               </div>
             </div>
 
-            {/* Primary Action Button */}
+            {/* Upgraded Primary Claim Action Button */}
             <div className="claim-action-wrap mb-8">
               <button
                 id="btn-claim-wallet"
                 type="button"
-                className="cf-hero-cta w-full justify-center text-base py-4"
+                className="claim-action-btn"
                 onClick={handleMockConnectClaim}
               >
                 <Wallet size={20} />
                 <span>Connect Wallet to Claim</span>
-                <div className="cf-hero-cta-icon"><ArrowRight size={18} strokeWidth={2.5} /></div>
+                <ArrowRight size={18} strokeWidth={2.5} />
               </button>
               <p className="text-xs text-white/40 text-center mt-3 flex items-center justify-center gap-1">
                 <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
@@ -197,9 +203,9 @@ function ClaimContent() {
               </div>
             </div>
 
-            <Link href="/" className="cf-hero-cta w-full justify-center">
+            <Link href="/" className="claim-action-btn justify-center">
               <span>Return to LynxX Home</span>
-              <div className="cf-hero-cta-icon"><ArrowRight size={18} strokeWidth={2.5} /></div>
+              <ArrowRight size={18} strokeWidth={2.5} />
             </Link>
           </div>
         )}
