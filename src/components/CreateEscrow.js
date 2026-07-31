@@ -12,10 +12,8 @@ import {
   Sparkles, 
   ArrowRight, 
   Info, 
-  RefreshCw,
-  Repeat
+  RefreshCw 
 } from "lucide-react";
-import SubscriptionPrompt from "./SubscriptionPrompt";
 
 export default function CreateEscrow({ address }) {
   const [token, setToken] = useState("USDC");
@@ -28,7 +26,6 @@ export default function CreateEscrow({ address }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedLink, setGeneratedLink] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [showDemoPrompt, setShowDemoPrompt] = useState(false);
 
   // Approximate USD conversion rates for UI display
   const tokenRates = {
@@ -105,31 +102,13 @@ export default function CreateEscrow({ address }) {
   return (
     <div className="escrow-container">
       <div className="escrow-header mb-24">
-        <div className="flex items-center gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-3 mb-8">
           <div className="escrow-badge">
             <ShieldCheck size={16} className="text-cyan-400" />
             <span>Trustless Smart Escrow</span>
           </div>
           <span className="badge-testnet">Soroban Protocol</span>
-          <button
-            type="button"
-            className="btn btn-glass-secondary text-xs py-1 px-3 flex items-center gap-1.5"
-            onClick={() => setShowDemoPrompt(true)}
-          >
-            <Repeat size={12} className="text-purple-400" /> Test Subscription Prompt
-          </button>
         </div>
-
-        {/* Demo Subscription Authorization Prompt Modal */}
-        <SubscriptionPrompt
-          merchantName="Acme SaaS Premium"
-          amount="15"
-          token="USDC"
-          intervalDays={30}
-          isOpen={showDemoPrompt}
-          onAuthorize={() => setShowDemoPrompt(false)}
-          onCancel={() => setShowDemoPrompt(false)}
-        />
         <h1 className="escrow-title">Create Escrow Link</h1>
         <p className="escrow-subtitle">
           Lock funds securely in an on-chain smart contract. Share the generated link with your counterparty to commence work or trade.
