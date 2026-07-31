@@ -6,15 +6,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast as sonnerToast } from "sonner";
 import { 
-  ShieldCheck, 
   Copy, 
   Check, 
   ExternalLink, 
   AlertTriangle, 
   ArrowRight, 
-  Info,
   Wallet,
-  Lock
+  Lock,
+  ArrowUpRight,
+  CheckCircle2,
+  FileCheck
 } from "lucide-react";
 import logoImg from "../../media/LynxX.png";
 
@@ -57,65 +58,48 @@ function ClaimContent() {
     addr.length > 14 ? `${addr.slice(0, 6)}...${addr.slice(-6)}` : addr;
 
   return (
-    <div className="claim-page-wrapper relative overflow-hidden min-h-screen bg-black text-white">
-      {/* Decorative background orbs matching LynxX landing theme */}
+    <div className="claim-page-wrapper relative overflow-hidden min-h-screen bg-black text-white flex flex-col justify-between">
+      {/* Ambient background glow orbs */}
       <div className="lp-orb lp-orb-1" />
       <div className="lp-orb lp-orb-2" />
 
-      {/* LynxX Platform Navigation Header */}
-      <header className="w-full px-6 py-4 flex justify-between items-center relative z-10 border-b border-white/5">
-        <nav className="cf-nav w-full max-w-6xl mx-auto flex justify-between items-center">
-          <div className="cf-nav-left flex items-center gap-6">
-            <div className="cf-nav-brand">
-              <Link href="/">
-                <Image className="cf-nav-logo" src={logoImg} alt="LynxX logo" width={120} height={36} priority style={{ height: "36px", width: "auto" }} />
-              </Link>
-            </div>
-            <div className="cf-nav-pill hidden md:flex items-center gap-6 text-sm">
-              <Link href="/" className="cf-nav-link text-white/60 hover:text-white transition-colors">Home</Link>
-              <Link href="/docs" className="cf-nav-link text-white/60 hover:text-white transition-colors">Docs</Link>
-            </div>
-          </div>
-          <button className="cf-nav-cta-glass" onClick={handleMockConnectClaim}>
-            <span>Connect Wallet</span>
-            <div className="cf-nav-cta-icon"><ArrowRight size={18} strokeWidth={2.5} /></div>
-          </button>
-        </nav>
+      {/* Streamlined Header: LynxX Logo Only (Clicking navigates to Home) */}
+      <header className="w-full py-8 flex justify-center items-center relative z-20">
+        <Link href="/" title="Return to LynxX Home">
+          <Image 
+            src={logoImg} 
+            alt="LynxX Logo" 
+            width={140} 
+            height={42} 
+            priority 
+            className="h-10 w-auto cursor-pointer hover:opacity-85 transition-opacity" 
+          />
+        </Link>
       </header>
 
-      {/* Main Container */}
-      <main className="claim-main-content relative z-10 max-w-4xl mx-auto px-6 py-16 flex flex-col items-center">
+      {/* Main Content Area */}
+      <main className="claim-main-content relative z-20 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {isValidLink ? (
           /* Valid Escrow Claim Card */
-          <div className="bento-card claim-card w-full max-w-xl p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
-            <div className="claim-badge-row flex items-center justify-between mb-6">
-              <div className="escrow-badge flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold">
-                <ShieldCheck size={16} />
-                <span>On-Chain Soroban Escrow</span>
-              </div>
-              <span className="claim-status-tag text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 rounded-full">
-                ● Ready to Claim
-              </span>
-            </div>
-
-            {/* Sender / From info */}
+          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
+            {/* Sender Pill */}
             {fromAddress && (
-              <div className="claim-sender-pill inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/[0.04] border border-white/10 text-xs">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-white/[0.04] border border-white/10 text-xs">
                 <span className="text-white/50">Sent by:</span>
                 <span className="font-mono text-white">{shortAddr(fromAddress)}</span>
               </div>
             )}
 
-            {/* Headline Message (Acceptance Criteria Requirement) */}
-            <h1 className="claim-amount-headline text-2xl md:text-3xl font-extrabold text-white mb-2 leading-snug tracking-tight">
-              You have been sent <span className="highlight-amt bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">{amountNumber.toLocaleString()} {token}</span> in escrow.
+            {/* Headline Message */}
+            <h1 className="claim-amount-headline text-3xl md:text-4xl font-extrabold text-white mb-2 leading-tight tracking-tight">
+              You have been sent <span className="highlight-amt bg-gradient-to-r from-cyan-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">{amountNumber.toLocaleString()} {token}</span> in escrow.
             </h1>
 
             <p className="text-white/50 text-sm mb-8">
-              ≈ ${usdValue} USD locked trustlessly in Soroban Smart Contract
+              ≈ ${usdValue} USD locked in Soroban Smart Contract
             </p>
 
-            {/* Contract ID Information Card */}
+            {/* Contract ID Information Box */}
             <div className="claim-contract-info-box p-4 mb-8 rounded-2xl bg-white/[0.02] border border-white/10">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs text-white/50 font-medium">Escrow Contract ID</span>
@@ -136,15 +120,15 @@ function ClaimContent() {
               </div>
             </div>
 
-            {/* Primary Action Button (Acceptance Criteria Requirement: disabled/mock Connect Wallet to Claim) */}
+            {/* Primary Action Button */}
             <div className="claim-action-wrap mb-8">
               <button
                 id="btn-claim-wallet"
                 type="button"
-                className="cf-hero-cta w-full justify-center opacity-85 hover:opacity-100 cursor-pointer"
+                className="cf-hero-cta w-full justify-center text-base py-4"
                 onClick={handleMockConnectClaim}
               >
-                <Wallet size={18} />
+                <Wallet size={20} />
                 <span>Connect Wallet to Claim</span>
                 <div className="cf-hero-cta-icon"><ArrowRight size={18} strokeWidth={2.5} /></div>
               </button>
@@ -153,26 +137,45 @@ function ClaimContent() {
               </p>
             </div>
 
-            {/* How claiming works explainer */}
-            <div className="claim-explainer-box p-4 rounded-2xl bg-white/[0.02] border border-white/5 border-dashed">
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Info size={14} className="text-cyan-400" /> How Claiming Works
+            {/* Systematic How Claiming Works Section */}
+            <div className="claim-explainer-box p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span>Systematic Claiming Process</span>
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-white/60">
-                <div className="explainer-step-item flex items-center gap-2">
-                  <div className="step-num-sm w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-[10px] flex items-center justify-center flex-shrink-0">1</div>
-                  <span>Connect your Stellar Testnet wallet.</span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold text-xs flex items-center justify-center">1</span>
+                    <Wallet size={14} className="text-white/40" />
+                  </div>
+                  <h5 className="text-xs font-semibold text-white">Connect Wallet</h5>
+                  <p className="text-[11px] text-white/40 leading-relaxed">Sign in with your Freighter or Albedo Stellar wallet.</p>
                 </div>
-                <div className="explainer-step-item flex items-center gap-2">
-                  <div className="step-num-sm w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 font-bold text-[10px] flex items-center justify-center flex-shrink-0">2</div>
-                  <span>Authorize smart contract payout transaction.</span>
+
+                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center">2</span>
+                    <FileCheck size={14} className="text-white/40" />
+                  </div>
+                  <h5 className="text-xs font-semibold text-white">Verify Terms</h5>
+                  <p className="text-[11px] text-white/40 leading-relaxed">Review smart contract release parameters.</p>
+                </div>
+
+                <div className="process-step p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center">3</span>
+                    <CheckCircle2 size={14} className="text-white/40" />
+                  </div>
+                  <h5 className="text-xs font-semibold text-white">Instant Payout</h5>
+                  <p className="text-[11px] text-white/40 leading-relaxed">Funds unlock directly into your non-custodial wallet.</p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          /* Malformed / Missing Parameters Error State View (Acceptance Criteria Requirement) */
-          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 text-center rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
+          /* Malformed / Missing Parameters Error State View */
+          <div className="bento-card claim-card claim-error-card w-full max-w-md p-8 md:p-10 text-center rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl">
             <div className="error-icon-wrapper w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={32} className="text-amber-400" />
             </div>
@@ -201,6 +204,11 @@ function ClaimContent() {
           </div>
         )}
       </main>
+
+      {/* Simple Footer */}
+      <footer className="w-full py-6 text-center text-xs text-white/30 relative z-20">
+        LynxX Non-Custodial Smart Escrow Protocol
+      </footer>
     </div>
   );
 }
