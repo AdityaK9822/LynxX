@@ -1,0 +1,29 @@
+{
+  "name": "lynxx-github-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Probot app that sends rich GitHub notifications to Discord.",
+  "scripts": {
+    "build": "tsc",
+    "start": "probot run ./lib/index.js",
+    "dev": "nodemon --exec \"npm start\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "probot": "^13.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.12.7",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "smee-client": "^2.0.1",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
+}
