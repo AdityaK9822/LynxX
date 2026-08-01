@@ -4,6 +4,7 @@ import { handlePullRequestEvent } from "./handlers/pullRequests";
 import { handlePullRequestReviewEvent, handlePullRequestReviewRequestEvent } from "./handlers/reviews";
 import { handlePushEvent } from "./handlers/pushes";
 import { handleReleaseEvent } from "./handlers/releases";
+import { handleIssueCommentEvent } from "./handlers/comments";
 
 export = (app: Probot) => {
   app.log.info("LynxX Discord Bot was loaded!");
@@ -18,7 +19,7 @@ export = (app: Probot) => {
 
   // --- Pull Requests ---
   app.on("pull_request.opened", (ctx) => handlePullRequestEvent(ctx, "PR Opened", "🟢", "Opened"));
-  app.on("pull_request.closed", (ctx) => handlePullRequestEvent(ctx, "PR Closed", "🔴", "Closed")); // PR closed handles merge as well internally
+  app.on("pull_request.closed", (ctx) => handlePullRequestEvent(ctx, "PR Closed", "🔴", "Closed"));
   app.on("pull_request.reopened", (ctx) => handlePullRequestEvent(ctx, "PR Reopened", "🟢", "Opened"));
   app.on("pull_request.synchronize", (ctx) => handlePullRequestEvent(ctx, "PR Synchronized", "🔄", "Default"));
 
@@ -32,4 +33,7 @@ export = (app: Probot) => {
 
   // --- Releases ---
   app.on("release.published", (ctx) => handleReleaseEvent(ctx, "Release Published", "🎉", "Merged"));
+
+  // --- Issue Comments (Contributor Registration) ---
+  app.on("issue_comment.created", handleIssueCommentEvent);
 };

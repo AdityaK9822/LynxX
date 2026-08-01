@@ -4,7 +4,7 @@
   "private": true,
   "description": "A Probot app that sends rich GitHub notifications to Discord.",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p lib/data && cp src/data/*.json lib/data/",
     "start": "probot run ./lib/index.js",
     "dev": "nodemon --exec \"npm start\"",
     "test": "jest --passWithNoTests"
