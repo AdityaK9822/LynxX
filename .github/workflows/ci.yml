@@ -83,8 +83,13 @@ jobs:
       - name: Frontend Tests
         run: pnpm run test && pnpm -r run test
 
-      - name: Build SDK and packages
-        run: pnpm -r --workspace-concurrency=1 run build
+      - name: Build wallet SDK
+        run: pnpm --filter lynxx-wallet-sdk run build
+        env:
+          CI: false
+
+      - name: Build GitHub bot
+        run: pnpm --filter lynxx-github-bot run build
         env:
           CI: false
 
@@ -93,4 +98,3 @@ jobs:
         env:
           CI: false
           NEXT_TELEMETRY_DISABLED: 1
-          NODE_OPTIONS: "--max-old-space-size=4096"
