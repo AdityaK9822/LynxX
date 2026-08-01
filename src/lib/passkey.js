@@ -152,3 +152,81 @@ export function getSavedPasskeyId() {
     return null;
   }
 }
+
+/**
+ * Helper to get the saved public key hex from localStorage
+ */
+export function getSavedPublicKey() {
+  try {
+    return localStorage.getItem(STORAGE_PASSKEY_PUBKEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear saved passkey from localStorage
+ */
+export function clearSavedPasskey() {
+  try {
+    localStorage.removeItem(STORAGE_PASSKEY_ID);
+    localStorage.removeItem(STORAGE_PASSKEY_PUBKEY);
+  } catch {}
+}
+
+/**
+ * Prompt the user to sign a challenge with their saved passkey (navigator.credentials.get)
+ */
+export async function authenticatePasskey(challengeText = "Sign transaction on LynxX") {
+  if (!isPasskeySupported()) {
+    return {
+      success: false,
+      error: "Passkeys (WebAuthn) are not supported on this device or browser.",
+    };
+  }
+
+  const credentialID = getSavedPasskeyId();
+  if (!credentialID) {
+    return {
+      success: false,
+      error: "No passkey registered yet. Please generate a passkey first.",
+    };
+  }
+
+  const challenge = new TextEncoder().encode(challengeText);
+
+  try {
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: challenge,
+        userVerification: "preferred",
+        timeout: 60000,
+      },
+    });
+
+    if (!assertion) {
+      return { success: false, error: "Authentication failed or timed out." };
+    }
+
+    console.log("🔐 [WebAuthn Passkey Authentication Success]", {
+      credentialID: assertion.id,
+      response: assertion.response,
+    });
+
+    return {
+      success: true,
+      credentialID: assertion.id,
+      signature: bufferToHex(assertion.response.signature || new ArrayBuffer(0)),
+    };
+  } catch (err) {
+    let errorMsg = err.message || "Passkey verification failed.";
+    if (err.name === "NotAllowedError") {
+      errorMsg = "Biometric authentication prompt was canceled or timed out.";
+    }
+    console.warn("Passkey verification canceled or failed:", errorMsg);
+    return {
+      success: false,
+      error: errorMsg,
+    };
+  }
+}

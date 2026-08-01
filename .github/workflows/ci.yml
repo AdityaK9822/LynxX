@@ -78,12 +78,23 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Frontend Lints
-        run: pnpm -r run lint
+        run: pnpm run lint && pnpm -r run lint
 
       - name: Frontend Tests
-        run: pnpm -r run test
+        run: pnpm run test && pnpm -r run test
 
-      - name: Build production bundle
-        run: pnpm -r run build
+      - name: Build wallet SDK
+        run: pnpm --filter lynxx-wallet-sdk run build
         env:
           CI: false
+
+      - name: Build GitHub bot
+        run: pnpm --filter lynxx-github-bot run build
+        env:
+          CI: false
+
+      - name: Build Next.js application
+        run: pnpm run build
+        env:
+          CI: false
+          NEXT_TELEMETRY_DISABLED: 1
