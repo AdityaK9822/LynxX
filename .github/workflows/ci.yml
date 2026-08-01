@@ -67,7 +67,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm config set ignore-scripts true && pnpm install
+        run: pnpm config set ignore-scripts true && pnpm install --no-frozen-lockfile
 
       - name: Cache Next.js
         uses: actions/cache@v4
