@@ -23,6 +23,7 @@ export interface DiscordEmbed {
 }
 
 export interface DiscordPayload {
+  content?: string;
   embeds: DiscordEmbed[];
 }
 
@@ -31,7 +32,8 @@ export type WebhookCategory =
   | "available_issues"
   | "claimed_issues"
   | "pull_requests"
-  | "completed";
+  | "completed"
+  | "completed_contributions";
 
 // Simple in-memory cache to prevent duplicate notifications
 const notificationCache = new Set<string>();
@@ -52,6 +54,8 @@ export async function sendDiscordNotification(
     webhookUrl = process.env.DISCORD_WEBHOOK_PULL_REQUESTS;
   } else if (category === "completed" && process.env.DISCORD_WEBHOOK_COMPLETED) {
     webhookUrl = process.env.DISCORD_WEBHOOK_COMPLETED;
+  } else if (category === "completed_contributions" && process.env.DISCORD_WEBHOOK_COMPLETED_CONTRIBUTIONS) {
+    webhookUrl = process.env.DISCORD_WEBHOOK_COMPLETED_CONTRIBUTIONS;
   }
 
   if (!webhookUrl) {

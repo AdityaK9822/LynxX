@@ -3,13 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleIssueEvent = handleIssueEvent;
 const colors_1 = require("../utils/colors");
 const discord_1 = require("../utils/discord");
+const contributors_1 = require("../utils/contributors");
 async function handleIssueEvent(context, eventName, emoji, colorName) {
     const issue = context.payload.issue;
     const repository = context.payload.repository;
     const sender = context.payload.sender;
     const action = context.payload.action;
+    const assignee = context.payload.assignee;
     const eventId = `${context.id}-issue-${action}`;
-    // Route to the right Discord channel based on action
     let category = "general";
     if (action === "opened")
         category = "available_issues";
@@ -17,6 +18,13 @@ async function handleIssueEvent(context, eventName, emoji, colorName) {
         category = "claimed_issues";
     else if (action === "closed")
         category = "completed";
+    let content;
+    if (action === "assigned" && assignee) {
+        const discordId = (0, contributors_1.getDiscordId)(assignee.login);
+        if (discordId) {
+            content = `<@${discordId}> You've been assigned an issue!`;
+        }
+    }
     const fields = [
         {
             name: "📁 Repository",
@@ -29,19 +37,49 @@ async function handleIssueEvent(context, eventName, emoji, colorName) {
             inline: true,
         },
     ];
-    // Add assignee field if someone is assigned
-    const assignee = context.payload.assignee;
-    if (assignee) {
+    if (issue.assignee) {
         fields.push({
             name: "👤 Assignee",
-            value: `[${assignee.login}](${assignee.html_url})`,
+            value: `[${issue.assignee.login}](${issue.assignee.html_url})`,
+            inline: true,
+        });
+    }
+    if (issue.milestone) {
+        fields.push({
+            name: "📅 Milestone",
+            value: `[${issue.milestone.title}](${issue.milestone.html_url})`,
+            inline: true,
+        });
+    }
+    const priorityLabels = issue.labels
+        ? issue.labels.filter((l) => /^priority[:/]\s*/i.test(l.name))
+        : [];
+    if (priorityLabels.length > 0) {
+        fields.push({
+            name: "🔥 Priority",
+            value: priorityLabels
+                .map((l) => `\`${l.name.replace(/^priority[:/]\s*/i, "")}\``)
+                .join(", "),
             inline: true,
         });
     }
     if (issue.labels && issue.labels.length > 0) {
+        const nonPriorityLabels = issue.labels.filter((l) => !/^priority[:/]\s*/i.test(l.name));
+        if (nonPriorityLabels.length > 0) {
+            fields.push({
+                name: "🏷️ Labels",
+                value: nonPriorityLabels.map((l) => `\`${l.name}\``).join(", "),
+                inline: false,
+            });
+        }
+    }
+    if (issue.body && issue.body.length > 0) {
+        const truncated = issue.body.length > 300
+            ? issue.body.substring(0, 297) + "..."
+            : issue.body;
         fields.push({
-            name: "🏷️ Labels",
-            value: issue.labels.map((l) => `\`${l.name}\``).join(", "),
+            name: "📝 Description",
+            value: truncated,
             inline: false,
         });
     }
@@ -60,5 +98,5 @@ async function handleIssueEvent(context, eventName, emoji, colorName) {
         },
         timestamp: new Date().toISOString(),
     };
-    await (0, discord_1.sendDiscordNotification)(eventId, { embeds: [embed] }, category);
+    await (0, discord_1.sendDiscordNotification)(eventId, { content, embeds: [embed] }, category);
 }

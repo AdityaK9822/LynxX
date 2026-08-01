@@ -22,6 +22,9 @@ async function sendDiscordNotification(eventId, payload, category = "general") {
     else if (category === "completed" && process.env.DISCORD_WEBHOOK_COMPLETED) {
         webhookUrl = process.env.DISCORD_WEBHOOK_COMPLETED;
     }
+    else if (category === "completed_contributions" && process.env.DISCORD_WEBHOOK_COMPLETED_CONTRIBUTIONS) {
+        webhookUrl = process.env.DISCORD_WEBHOOK_COMPLETED_CONTRIBUTIONS;
+    }
     if (!webhookUrl) {
         console.warn(`No Webhook URL found for category '${category}' or general fallback. Skipping notification.`);
         return;
