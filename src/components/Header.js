@@ -20,6 +20,7 @@ import Roadmap from "./Roadmap";
 import Testimonials from "./Testimonials";
 import NotificationBell from "./NotificationBell";
 import OnboardingModal, { shouldShowOnboarding } from "./OnboardingModal";
+import ErrorBoundary from "./ErrorBoundary";
 
 // ── Below-fold / conditional components (loaded lazily) ──
 // These are only needed after scroll or on user action, so we split them into
@@ -925,19 +926,26 @@ function Header() {
                         </div>
                     </div>
                 ) : activeView === 'escrow' ? (
-                    <CreateEscrow address={address} />
+                    <ErrorBoundary message="Could not load Escrow view. Try again.">
+                        <CreateEscrow address={address} />
+                    </ErrorBoundary>
                 ) : activeView === 'swap' ? (
                     <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
                         <MultiChainSwap />
                     </div>
                 ) : activeView === 'activity' ? (
-                    <Activity address={address} />
+                    <ErrorBoundary message="Could not load Activity view. Try again.">
+                        <Activity address={address} />
+                    </ErrorBoundary>
                 ) : activeView === 'receive' ? (
-                    <Receive address={address} />
+                    <ErrorBoundary message="Could not load Receive view. Try again.">
+                        <Receive address={address} />
+                    </ErrorBoundary>
                 ) : activeView === 'analytics' ? (
-                    <MarketAnalytics /> // Assuming you want analytics inside the dashboard as well if clicked from sidebar
+                    <MarketAnalytics />
                 ) : (
-                <div className="bento-grid">
+                <ErrorBoundary message="Could not load Dashboard. Try again.">
+                    <div className="bento-grid">
                     {/* Column 1 */}
                     <div className="bento-col bento-col-1">
                         {/* Total Balance */}
@@ -1049,6 +1057,7 @@ function Header() {
                         </div>
                     </div>
                 </div>
+                </ErrorBoundary>
                 )}
 
                 {/* Toast Notification */}

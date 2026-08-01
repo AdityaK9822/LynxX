@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Horizon } from "@stellar/stellar-sdk";
 import { ArrowUpRight, ArrowDownLeft, ExternalLink, Clock } from "lucide-react";
+import SkeletonCard from "./SkeletonCard";
 
 const server = new Horizon.Server("https://horizon-testnet.stellar.org");
 
@@ -54,9 +55,7 @@ export default function Activity({ address }) {
                     <p style={{ color: 'rgba(255,255,255,0.6)' }}>Connect your wallet to view your transaction history.</p>
                 </div>
             ) : isLoading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
-                    <span className="spinner" style={{ width: '32px', height: '32px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>
-                </div>
+                <SkeletonCard count={4} />
             ) : error ? (
                 <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <p style={{ color: '#ff4d4d' }}>{error}</p>
