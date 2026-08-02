@@ -19,10 +19,16 @@ async function handleIssueEvent(context, eventName, emoji, colorName) {
     else if (action === "closed")
         category = "completed";
     let content;
-    if (action === "assigned" && assignee) {
-        const discordId = (0, contributors_1.getDiscordId)(assignee.login);
-        if (discordId) {
-            content = `<@${discordId}> You've been assigned an issue!`;
+    if (action === "assigned") {
+        const assignedUser = assignee || issue.assignee || (issue.assignees && issue.assignees[0]);
+        if (assignedUser) {
+            const discordId = (0, contributors_1.getDiscordId)(assignedUser.login);
+            if (discordId) {
+                content = `<@${discordId}> You've been assigned to **#${issue.number} ${issue.title}**! 🎯`;
+            }
+            else {
+                content = `🎯 **@${assignedUser.login}** has been assigned to **#${issue.number} ${issue.title}**!`;
+            }
         }
     }
     const fields = [
