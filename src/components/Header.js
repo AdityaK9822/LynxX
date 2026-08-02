@@ -20,6 +20,7 @@ import Roadmap from "./Roadmap";
 import Testimonials from "./Testimonials";
 import NotificationBell from "./NotificationBell";
 import OnboardingModal, { shouldShowOnboarding } from "./OnboardingModal";
+import ErrorBoundary from "./ErrorBoundary";
 
 // ── Below-fold / conditional components (loaded lazily) ──
 // These are only needed after scroll or on user action, so we split them into
@@ -851,6 +852,7 @@ function Header() {
 
                 {/* Dashboard Grid */}
                 {activeView === 'send' ? (
+                    <ErrorBoundary>
                     <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', position: 'relative', flexShrink: 0 }}>
                         {/* Right-side ribbon background */}
                         <Image 
@@ -938,6 +940,7 @@ function Header() {
                             )}
                         </div>
                     </div>
+                    </ErrorBoundary>
                 ) : activeView === 'escrow' ? (
                     <CreateEscrow address={address} />
                 ) : activeView === 'swap' ? (
@@ -945,12 +948,13 @@ function Header() {
                         <MultiChainSwap />
                     </div>
                 ) : activeView === 'activity' ? (
-                    <Activity address={address} />
+                    <ErrorBoundary><Activity address={address} /></ErrorBoundary>
                 ) : activeView === 'receive' ? (
-                    <Receive address={address} />
+                    <ErrorBoundary><Receive address={address} /></ErrorBoundary>
                 ) : activeView === 'analytics' ? (
                     <MarketAnalytics /> // Assuming you want analytics inside the dashboard as well if clicked from sidebar
                 ) : (
+                <ErrorBoundary>
                 <div className="bento-grid">
                     {/* Column 1 */}
                     <div className="bento-col bento-col-1">
@@ -1063,6 +1067,7 @@ function Header() {
                         </div>
                     </div>
                 </div>
+                </ErrorBoundary>
                 )}
 
                 {/* Toast Notification */}
