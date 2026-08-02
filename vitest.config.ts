@@ -12,5 +12,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'packages/**',
+    ],
   },
 });
