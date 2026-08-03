@@ -42,17 +42,10 @@ export default function CashTagSettings({ address, setToast }) {
 
     try {
       const res = await checkCashTagAvailability(target, address);
-      if (res.available) {
-        setCheckStatus({
-          available: true,
-          message: res.reason || 'Available ✓'
-        });
-      } else {
-        setCheckStatus({
-          available: false,
-          message: res.reason || 'Taken ✗'
-        });
-      }
+      setCheckStatus({
+        available: !!res.available,
+        message: res.reason || (res.available ? "Available" : "Taken")
+      });
     } catch (err) {
       setCheckStatus({
         available: false,
