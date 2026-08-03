@@ -55,7 +55,13 @@ export default function Activity({ address }) {
                     <p style={{ color: 'rgba(255,255,255,0.6)' }}>Connect your wallet to view your transaction history.</p>
                 </div>
             ) : isLoading ? (
-                <SkeletonCard count={4} />
+                <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <SkeletonCard />
+                </div>
             ) : error ? (
                 <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <p style={{ color: '#ff4d4d' }}>{error}</p>
