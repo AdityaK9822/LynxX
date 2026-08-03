@@ -36,6 +36,7 @@ const MultiChainSwap  = dynamic(() => import("./motion/swap").then(m => ({ defau
 const UserInteractions = dynamic(() => import("./UserInteractions"), { ssr: false });
 const FeedbackForm     = dynamic(() => import("./FeedbackForm"),     { ssr: false });
 const CreateEscrow     = dynamic(() => import("./CreateEscrow"),     { ssr: false });
+const CashTagSettings  = dynamic(() => import("./CashTagSettings"),  { ssr: false });
 
 // ── Image imports (used as src strings for Next.js <Image> / CSS) ──
 import mainBG       from "../media/mainBG.png";
@@ -796,7 +797,7 @@ function Header() {
                     <a href="#" className={`bento-nav-item ${activeView === 'activity' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('activity'); }}><Clock size={20} /> Activity</a>
 
                     <a href="#" className={`bento-nav-item ${activeView === 'analytics' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('analytics'); }}><BarChart2 size={20} /> Analytics</a>
-                    <a href="#" className="bento-nav-item" onClick={e => e.preventDefault()}><Settings size={20} /> Settings</a>
+                    <a href="#" className={`bento-nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('settings'); }}><Settings size={20} /> Settings</a>
                 </nav>
                 
                 <div className="bento-sidebar-bottom">
@@ -943,6 +944,10 @@ function Header() {
                     </ErrorBoundary>
                 ) : activeView === 'analytics' ? (
                     <MarketAnalytics />
+                ) : activeView === 'settings' ? (
+                    <ErrorBoundary message="Could not load Settings view. Try again.">
+                        <CashTagSettings address={address} setToast={setToast} />
+                    </ErrorBoundary>
                 ) : (
                 <ErrorBoundary message="Could not load Dashboard. Try again.">
                     <div className="bento-grid">
