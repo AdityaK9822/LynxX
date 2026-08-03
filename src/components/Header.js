@@ -810,7 +810,7 @@ function Header() {
                     <a href="#" className={`bento-nav-item ${activeView === 'activity' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('activity'); }}><Clock size={20} /> Activity</a>
 
                     <a href="#" className={`bento-nav-item ${activeView === 'analytics' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('analytics'); }}><BarChart2 size={20} /> Analytics</a>
-                    <a href="#" className="bento-nav-item" onClick={e => e.preventDefault()}><Settings size={20} /> Settings</a>
+                    <a href="#" className={`bento-nav-item ${activeView === 'settings' ? 'active' : ''}`} onClick={e => { e.preventDefault(); setActiveView('settings'); }}><Settings size={20} /> Settings</a>
                 </nav>
                 
                 <div className="bento-sidebar-bottom">
@@ -942,7 +942,9 @@ function Header() {
                     </div>
                     </ErrorBoundary>
                 ) : activeView === 'escrow' ? (
-                    <CreateEscrow address={address} />
+                    <ErrorBoundary message="Could not load Escrow view. Try again.">
+                        <CreateEscrow address={address} />
+                    </ErrorBoundary>
                 ) : activeView === 'swap' ? (
                     <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
                         <MultiChainSwap />
@@ -952,7 +954,11 @@ function Header() {
                 ) : activeView === 'receive' ? (
                     <ErrorBoundary><Receive address={address} /></ErrorBoundary>
                 ) : activeView === 'analytics' ? (
-                    <MarketAnalytics /> // Assuming you want analytics inside the dashboard as well if clicked from sidebar
+                    <MarketAnalytics />
+                ) : activeView === 'settings' ? (
+                    <ErrorBoundary message="Could not load Settings view. Try again.">
+                        <CashTagSettings address={address} setToast={setToast} />
+                    </ErrorBoundary>
                 ) : (
                 <ErrorBoundary>
                 <div className="bento-grid">
