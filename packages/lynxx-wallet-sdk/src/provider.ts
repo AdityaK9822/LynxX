@@ -1,26 +1,14 @@
 import { StellarWalletsKit, Networks } from "@creit.tech/stellar-wallets-kit";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
 import type { LynxxConfig, LynxxNetwork } from "./types";
+import { LynxxWalletError } from "./errors";
 
 const NETWORK_PASSPHRASES: Record<LynxxNetwork, Networks> = {
   TESTNET: Networks.TESTNET,
   PUBLIC: Networks.PUBLIC,
 };
 
-/**
- * Thrown when a wallet operation fails, e.g. the user closes the wallet
- * selection modal, rejects a signing request, or no wallet is connected yet.
- */
-export class LynxxWalletError extends Error {
-  /** Machine-readable error code, e.g. `"ModalClosed"` or `"SigningRejected"`. */
-  code: string;
-
-  constructor(code: string, message: string) {
-    super(message);
-    this.name = "LynxxWalletError";
-    this.code = code;
-  }
-}
+// LynxxWalletError is defined in ./errors and re-exported from the package root.
 
 /**
  * Manages the connection to a user's Stellar wallet (Freighter, xBull,
@@ -70,10 +58,10 @@ export class LynxxWalletProvider {
       return address;
     } catch (error) {
       throw new LynxxWalletError(
-        "ModalClosed",
         error instanceof Error
           ? error.message
           : "Wallet connection was cancelled.",
+        "ModalClosed",
       );
     }
   }
@@ -99,8 +87,8 @@ export class LynxxWalletProvider {
   async signTransaction(xdr: string): Promise<string> {
     if (!this.address) {
       throw new LynxxWalletError(
-        "NotConnected",
         "No wallet connected. Call connect() before signTransaction().",
+        "NotConnected",
       );
     }
 
@@ -117,10 +105,10 @@ export class LynxxWalletProvider {
       return signedTxXdr;
     } catch (error) {
       throw new LynxxWalletError(
-        "SigningRejected",
         error instanceof Error
           ? error.message
           : "Transaction signing was rejected.",
+        "SigningRejected",
       );
     }
   }

@@ -1,3 +1,5 @@
+import type { Transaction, FeeBumpTransaction } from "@stellar/stellar-sdk";
+
 /**
  * Stellar network the SDK should operate on.
  *
