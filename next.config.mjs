@@ -19,6 +19,19 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  async headers() {
+    return [
+      {
+        // SEP-0001 requires CORS on stellar.toml, and recommends text/plain
+        // so browsers render it instead of downloading it.
+        source: '/.well-known/stellar.toml',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
