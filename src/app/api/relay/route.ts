@@ -80,10 +80,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build fee bump transaction
+    // Build fee bump transaction - fee must be a string
     const feeBumpTx = StellarSdk.TransactionBuilder.buildFeeBumpTransaction(
       relayerKeypair,
-      100,
+      '100',
       envelope,
       passphrase
     );
