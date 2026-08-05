@@ -32,7 +32,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@creit.tech/stellar-wallets-kit": "^2.5.0"
+    "@creit.tech/stellar-wallets-kit": "^2.5.0",
+    "@stellar/freighter-api": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -43,9 +44,6 @@
     "typescript": "^5.5.2",
     "typescript-eslint": "^8.63.0",
     "vitest": "^1.6.0"
-  },
-  "dependencies": {
-    "@stellar/freighter-api": "^6.0.1"
   },
   "peerDependencies": {
     "@stellar/stellar-sdk": ">=10.0.0"
