@@ -12,8 +12,11 @@ import {
   Sparkles, 
   ArrowRight, 
   Info, 
-  RefreshCw 
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
+import { connectWallet } from "./Wallet";
+import { depositEscrow, ESCROW_CONTRACT_ID } from "../lib/escrowContract";
 
 export default function CreateEscrow({ address }) {
   const [token, setToken] = useState("USDC");
@@ -24,6 +27,7 @@ export default function CreateEscrow({ address }) {
   const [timelockDuration, setTimelockDuration] = useState("7"); // in days
   const [inspectionPeriod, setInspectionPeriod] = useState("2"); // in days
   const [isGenerating, setIsGenerating] = useState(false);
+  const [txStatus, setTxStatus] = useState("idle"); // "idle" | "connecting" | "preparing" | "signing" | "submitting" | "confirming" | "success" | "error"
   const [generatedLink, setGeneratedLink] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +40,24 @@ export default function CreateEscrow({ address }) {
 
   const usdValue = amount && !isNaN(amount) ? (parseFloat(amount) * tokenRates[token]).toFixed(2) : "0.00";
 
-  const handleGenerateLink = (e) => {
+  const getStatusLabel = () => {
+    switch (txStatus) {
+      case "connecting":
+        return "Connecting Wallet...";
+      case "preparing":
+        return "Simulating Transaction...";
+      case "signing":
+        return "Awaiting Wallet Signature...";
+      case "submitting":
+        return "Submitting to Soroban RPC...";
+      case "confirming":
+        return "Confirming On-Chain...";
+      default:
+        return "Generating Link...";
+    }
+  };
+
+  const handleGenerateLink = async (e) => {
     e.preventDefault();
 
     if (!amount || parseFloat(amount) <= 0) {
@@ -45,39 +66,58 @@ export default function CreateEscrow({ address }) {
     }
 
     setIsGenerating(true);
+    let activeAddress = address;
 
-    const formState = {
-      creatorAddress: address || "Unconnected",
-      token,
-      amount: parseFloat(amount),
-      usdEquivalent: parseFloat(usdValue),
-      recipient: recipient.trim() || "Anyone with link",
-      title: title.trim() || "Escrow Agreement",
-      releaseCondition,
-      timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
-      inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      if (!activeAddress) {
+        setTxStatus("connecting");
+        activeAddress = await connectWallet();
+      }
 
-    // Requirement: console.log the form state for now
-    console.log("Create Escrow Form State:", formState);
-
-    // Simulate mock link generation UI response
-    setTimeout(() => {
-      const mockId = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 8);
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
-      const mockContractId = `CCIYIE3WDF5EEC4DL25JR2O4SAV2G3USARIBMCLWPIFQVUOIVDEN5FWI`;
-      const fakeUrl = `${origin}/claim?c=${mockContractId}&amt=${amount}&token=${token}`;
-      
-      setGeneratedLink({
-        url: fakeUrl,
-        id: mockContractId,
-        details: formState,
+      setTxStatus("preparing");
+      const { hash } = await depositEscrow({
+        senderAddress: activeAddress,
+        amount: amount,
+        token: token,
+        contractId: ESCROW_CONTRACT_ID,
+        onStatusUpdate: (status) => setTxStatus(status),
       });
 
+      const formState = {
+        creatorAddress: activeAddress,
+        token,
+        amount: parseFloat(amount),
+        usdEquivalent: parseFloat(usdValue),
+        recipient: recipient.trim() || "Anyone with link",
+        title: title.trim() || "Escrow Agreement",
+        releaseCondition,
+        timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
+        inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
+        createdAt: new Date().toISOString(),
+        txHash: hash,
+      };
+
+      console.log("Create Escrow Deposit Tx Hash:", hash);
+
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
+      const fakeUrl = `${origin}/claim?c=${ESCROW_CONTRACT_ID}&amt=${amount}&token=${token}&from=${activeAddress}`;
+
+      setGeneratedLink({
+        url: fakeUrl,
+        id: ESCROW_CONTRACT_ID,
+        details: formState,
+        txHash: hash,
+      });
+
+      setTxStatus("success");
+      sonnerToast.success("Soroban escrow deposit confirmed!");
+    } catch (err) {
+      console.error("Escrow deposit error:", err);
+      setTxStatus("error");
+      sonnerToast.error(err.message || "Failed to submit deposit transaction.");
+    } finally {
       setIsGenerating(false);
-      sonnerToast.success("Escrow link generated successfully!");
-    }, 600);
+    }
   };
 
   const handleCopyLink = () => {
@@ -280,7 +320,7 @@ export default function CreateEscrow({ address }) {
             >
               {isGenerating ? (
                 <>
-                  <span className="spinner"></span> Generating Link...
+                  <span className="spinner"></span> {getStatusLabel()}
                 </>
               ) : (
                 <>
@@ -314,7 +354,7 @@ export default function CreateEscrow({ address }) {
                   title="Click to open claim page"
                 >
                   <span className="truncate">
-                    {origin}/claim?c={generatedLink.id.slice(0, 6)}...&amp;amt={generatedLink.details.amount}
+                    {generatedLink.url}
                   </span>
                 </a>
                 <button
@@ -328,6 +368,19 @@ export default function CreateEscrow({ address }) {
               </div>
 
               <div className="escrow-summary-table mb-20">
+                {generatedLink.txHash && (
+                  <div className="summary-row">
+                    <span className="summary-label">Soroban Tx</span>
+                    <a
+                      href={`https://stellar.expert/explorer/testnet/tx/${generatedLink.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="summary-value text-xs text-purple-400 hover:underline flex items-center gap-1 font-mono"
+                    >
+                      {generatedLink.txHash.slice(0, 6)}...{generatedLink.txHash.slice(-6)} <ExternalLink size={12} />
+                    </a>
+                  </div>
+                )}
                 <div className="summary-row">
                   <span className="summary-label">Amount</span>
                   <span className="summary-value font-bold text-white">

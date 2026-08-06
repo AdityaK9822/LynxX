@@ -19,6 +19,8 @@ import {
 
 import logoImg from "../../media/LynxX.png";
 import mainBG from "../../media/mainBG.png";
+import { connectWallet } from "../../components/Wallet";
+import { releaseEscrow } from "../../lib/escrowContract";
 
 function ClaimContent() {
   const searchParams = useSearchParams();
@@ -35,6 +37,10 @@ function ClaimContent() {
   const isValidLink = isValidAmount && isValidContract;
 
   const [copied, setCopied] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [txStatus, setTxStatus] = useState<"idle" | "connecting" | "preparing" | "signing" | "submitting" | "confirming" | "success" | "error">("idle");
+  const [claimTxHash, setClaimTxHash] = useState("");
 
   // Conversion rate for USD estimate display
   const rates: Record<string, number> = { USDC: 1.0, XLM: 0.328, EURC: 1.08 };
@@ -48,11 +54,52 @@ function ClaimContent() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleMockConnectClaim = () => {
-    sonnerToast.info(
-      "Wallet claiming integration will be enabled in the upcoming Soroban smart contract release.",
-      { duration: 4000 }
-    );
+  const getStatusLabel = () => {
+    switch (txStatus) {
+      case "connecting":
+        return "Connecting Wallet...";
+      case "preparing":
+        return "Simulating Release...";
+      case "signing":
+        return "Awaiting Wallet Signature...";
+      case "submitting":
+        return "Submitting Release Tx...";
+      case "confirming":
+        return "Confirming On-Chain...";
+      default:
+        return "Processing Claim...";
+    }
+  };
+
+  const handleConnectAndClaim = async () => {
+    setIsClaiming(true);
+    let activeAddress = walletAddress;
+
+    try {
+      if (!activeAddress) {
+        setTxStatus("connecting");
+        activeAddress = await connectWallet();
+        setWalletAddress(activeAddress);
+      }
+
+      setTxStatus("preparing");
+      const { hash } = await releaseEscrow({
+        claimerAddress: activeAddress,
+        contractId: contractId,
+        args: { amount: amountNumber, token: token },
+        onStatusUpdate: (status: string) => setTxStatus(status as any),
+      });
+
+      setClaimTxHash(hash);
+      setTxStatus("success");
+      sonnerToast.success("Escrow release confirmed on Soroban testnet!");
+    } catch (err: any) {
+      console.error("Release escrow error:", err);
+      setTxStatus("error");
+      sonnerToast.error(err.message || "Failed to release escrow.");
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
   const shortAddr = (addr: string) => 
@@ -136,21 +183,61 @@ function ClaimContent() {
               </div>
             </div>
 
-            {/* Upgraded Primary Claim Action Button */}
+            {/* Upgraded Primary Claim Action Button / Success State */}
             <div className="claim-action-wrap mb-8">
-              <button
-                id="btn-claim-wallet"
-                type="button"
-                className="claim-action-btn"
-                onClick={handleMockConnectClaim}
-              >
-                <Wallet size={20} />
-                <span>Connect Wallet to Claim</span>
-                <ArrowRight size={18} strokeWidth={2.5} />
-              </button>
-              <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
-                <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
-              </p>
+              {txStatus === "success" ? (
+                <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center">
+                  <div className="flex items-center justify-center gap-2 text-emerald-400 font-bold mb-2">
+                    <CheckCircle2 size={22} />
+                    <span>Escrow Released Successfully!</span>
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3">
+                    Funds have been unlocked on Soroban testnet and transferred to your wallet.
+                  </p>
+                  {claimTxHash && (
+                    <a
+                      href={`https://stellar.expert/explorer/testnet/tx/${claimTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-purple-400 hover:underline font-mono bg-black/60 px-3 py-1.5 rounded-lg border border-white/10"
+                    >
+                      Tx: {shortAddr(claimTxHash)} <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    id="btn-claim-wallet"
+                    type="button"
+                    className="claim-action-btn w-full"
+                    onClick={handleConnectAndClaim}
+                    disabled={isClaiming}
+                  >
+                    {isClaiming ? (
+                      <>
+                        <span className="spinner"></span>
+                        <span>{getStatusLabel()}</span>
+                      </>
+                    ) : walletAddress ? (
+                      <>
+                        <Wallet size={20} />
+                        <span>Release Escrow ({shortAddr(walletAddress)})</span>
+                        <ArrowRight size={18} strokeWidth={2.5} />
+                      </>
+                    ) : (
+                      <>
+                        <Wallet size={20} />
+                        <span>Connect Wallet to Claim</span>
+                        <ArrowRight size={18} strokeWidth={2.5} />
+                      </>
+                    )}
+                  </button>
+                  <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
+                    <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Systematic How Claiming Works Section */}
