@@ -5,6 +5,8 @@
  * backed by localStorage and is not readable from the server.
  */
 
+import { getCashtagAddress, getCashtagByAddress } from '@/lib/db';
+
 /** Domain this server is authoritative for. Read lazily so runtime env wins. */
 export function federationDomain(): string {
   return process.env.FEDERATION_DOMAIN || 'lynxx.app';
@@ -67,7 +69,12 @@ export function parseFederationAddress(
 
 /** The seam issue #8 replaces. Null when the handle is not registered. */
 async function lookupAccountId(handle: string): Promise<string | null> {
-  return configuredAccounts()[handle] ?? null;
+  // Env-var map takes priority — keeps local dev and CI working without Supabase.
+  const fromEnv = configuredAccounts()[handle];
+  if (fromEnv) return fromEnv;
+
+  // Persistent lookup for production.
+  return getCashtagAddress(handle);
 }
 
 /** Resolve `aman*lynxx.app` to its account, or null if unregistered. */
@@ -89,10 +96,16 @@ export async function resolveAccountId(
 ): Promise<FederationRecord | null> {
   if (!STELLAR_ADDRESS.test(accountId ?? '')) return null;
 
-  const match = Object.entries(configuredAccounts()).find(
+  // Check env-var map first (dev/CI).
+  const envMatch = Object.entries(configuredAccounts()).find(
     ([, id]) => id === accountId
   );
-  if (!match) return null;
+  if (envMatch) {
+    return { handle: envMatch[0], domain: federationDomain(), accountId };
+  }
 
-  return { handle: match[0], domain: federationDomain(), accountId };
+  // Fall through to Supabase reverse lookup.
+  const row = await getCashtagByAddress(accountId);
+  if (!row) return null;
+  return { handle: row.handle, domain: row.domain, accountId };
 }
