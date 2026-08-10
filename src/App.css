@@ -2425,25 +2425,30 @@ body {
 }
 
 .token-chip {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.5);
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.55);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.82rem;
     font-weight: 700;
+    letter-spacing: 0.03em;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .token-chip:hover {
-    color: #fff;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
 }
 
 .token-chip.active {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px) scale(1.02);
 }
 
 .release-condition-grid {
