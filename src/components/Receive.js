@@ -6,7 +6,7 @@ import QRCode from "react-qr-code";
 import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import mainBG from "../media/mainBG.png";
-import landPhoto from "../media/landphoto.png";
+import crowdfundBG from "../media/crowdfund.png";
 
 export default function Receive({ address }) {
     const [copied, setCopied] = useState(false);
@@ -96,27 +96,27 @@ export default function Receive({ address }) {
 
     return (
         <div className="receive-wrapper-outer" style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 16px' }}>
-            {/* Outer Glassmorphic Section with 3D Glass Hero Image (landphoto.png) */}
+            {/* Outer Glassmorphic Section with Unique 3D Crystal Ribbon BG (crowdfund.png) */}
             <div 
                 className="receive-section-hero" 
                 style={{
                     position: 'relative',
                     borderRadius: '28px',
                     padding: '36px 32px',
-                    background: 'radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(5, 6, 10, 0.95) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    background: 'radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.22) 0%, rgba(168, 85, 247, 0.22) 45%, rgba(6, 7, 12, 0.96) 100%)',
+                    border: '1px solid rgba(168, 85, 247, 0.3)',
+                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(168, 85, 247, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
                     overflow: 'hidden'
                 }}
             >
-                {/* 3D Glass Hero Background Image */}
+                {/* Unique 3D Crystal Background Image */}
                 <Image
-                    src={landPhoto}
-                    alt="LynxX 3D Hero Background"
+                    src={crowdfundBG}
+                    alt="LynxX 3D Crystal Background"
                     fill
                     priority
                     aria-hidden="true"
-                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.35, pointerEvents: 'none', zIndex: 0 }}
+                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.4, pointerEvents: 'none', zIndex: 0 }}
                 />
 
                 {/* Header */}
@@ -149,7 +149,7 @@ export default function Receive({ address }) {
                         className="receive-glass-card" 
                         style={{
                             padding: '28px',
-                            background: 'rgba(10, 11, 16, 0.75)',
+                            background: 'rgba(10, 11, 16, 0.78)',
                             backdropFilter: 'blur(24px)',
                             WebkitBackdropFilter: 'blur(24px)',
                             border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -172,8 +172,8 @@ export default function Receive({ address }) {
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 padding: '30px 20px',
-                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.22) 50%, rgba(99, 102, 241, 0.15) 100%)',
-                                border: '1px solid rgba(168, 85, 247, 0.4)',
+                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.25) 50%, rgba(99, 102, 241, 0.18) 100%)',
+                                border: '1px solid rgba(168, 85, 247, 0.45)',
                                 borderRadius: '22px',
                                 transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                                 cursor: 'pointer',
@@ -194,7 +194,7 @@ export default function Receive({ address }) {
                             <div style={{
                                 position: 'absolute',
                                 inset: 0,
-                                background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 80%)',
+                                background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.35) 0%, rgba(168, 85, 247, 0.28) 50%, transparent 80%)',
                                 pointerEvents: 'none'
                             }} />
 
@@ -205,7 +205,7 @@ export default function Receive({ address }) {
                                 background: '#ffffff',
                                 padding: '18px',
                                 borderRadius: '18px',
-                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(56, 189, 248, 0.3)',
+                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(56, 189, 248, 0.35)',
                                 border: '1px solid rgba(255, 255, 255, 0.3)'
                             }}>
                                 <QRCode
@@ -237,7 +237,7 @@ export default function Receive({ address }) {
                         className="receive-glass-card" 
                         style={{
                             padding: '28px',
-                            background: 'rgba(10, 11, 16, 0.75)',
+                            background: 'rgba(10, 11, 16, 0.78)',
                             backdropFilter: 'blur(24px)',
                             WebkitBackdropFilter: 'blur(24px)',
                             border: '1px solid rgba(255, 255, 255, 0.12)',
