@@ -2394,13 +2394,19 @@ body {
 }
 
 .escrow-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 22px;
-    padding: 30px;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(135deg, rgba(16, 18, 27, 0.85) 0%, rgba(10, 11, 16, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 32px;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.escrow-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(56, 189, 248, 0.08);
 }
 
 .escrow-amount-row {
