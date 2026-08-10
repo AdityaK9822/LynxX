@@ -15,6 +15,8 @@ import {
   RefreshCw 
 } from "lucide-react";
 
+import { submitEscrowDeposit, DEFAULT_ESCROW_CONTRACT_ID } from "../lib/escrowContract";
+
 export default function CreateEscrow({ address }) {
   const [token, setToken] = useState("USDC");
   const [amount, setAmount] = useState("");
@@ -24,6 +26,7 @@ export default function CreateEscrow({ address }) {
   const [timelockDuration, setTimelockDuration] = useState("7"); // in days
   const [inspectionPeriod, setInspectionPeriod] = useState("2"); // in days
   const [isGenerating, setIsGenerating] = useState(false);
+  const [txStatusMsg, setTxStatusMsg] = useState("");
   const [generatedLink, setGeneratedLink] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +39,7 @@ export default function CreateEscrow({ address }) {
 
   const usdValue = amount && !isNaN(amount) ? (parseFloat(amount) * tokenRates[token]).toFixed(2) : "0.00";
 
-  const handleGenerateLink = (e) => {
+  const handleGenerateLink = async (e) => {
     e.preventDefault();
 
     if (!amount || parseFloat(amount) <= 0) {
@@ -45,39 +48,62 @@ export default function CreateEscrow({ address }) {
     }
 
     setIsGenerating(true);
+    setTxStatusMsg("Preparing Soroban deposit...");
 
-    const formState = {
-      creatorAddress: address || "Unconnected",
-      token,
-      amount: parseFloat(amount),
-      usdEquivalent: parseFloat(usdValue),
-      recipient: recipient.trim() || "Anyone with link",
-      title: title.trim() || "Escrow Agreement",
-      releaseCondition,
-      timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
-      inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Requirement: console.log the form state for now
-    console.log("Create Escrow Form State:", formState);
-
-    // Simulate mock link generation UI response
-    setTimeout(() => {
-      const mockId = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 8);
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
-      const mockContractId = `CCIYIE3WDF5EEC4DL25JR2O4SAV2G3USARIBMCLWPIFQVUOIVDEN5FWI`;
-      const fakeUrl = `${origin}/claim?c=${mockContractId}&amt=${amount}&token=${token}`;
-      
-      setGeneratedLink({
-        url: fakeUrl,
-        id: mockContractId,
-        details: formState,
+    try {
+      const depositResult = await submitEscrowDeposit({
+        senderAddress: address,
+        contractId: DEFAULT_ESCROW_CONTRACT_ID,
+        token,
+        amount: parseFloat(amount),
+        recipient: recipient.trim() || "Anyone with link",
+        title: title.trim() || "Escrow Agreement",
+        releaseCondition,
+        timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
+        inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
+        onStateChange: (state) => {
+          if (state.message) setTxStatusMsg(state.message);
+          if (state.step === "connecting") {
+            sonnerToast.info("Connecting Stellar wallet...");
+          } else if (state.step === "signing") {
+            sonnerToast.info("Please approve deposit in your wallet.");
+          } else if (state.step === "submitting") {
+            sonnerToast.info("Submitting transaction to Soroban RPC...");
+          }
+        },
       });
 
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
+      const escContractId = depositResult.contractId || DEFAULT_ESCROW_CONTRACT_ID;
+      const claimUrl = `${origin}/claim?c=${escContractId}&amt=${amount}&token=${token}${depositResult.senderAddress ? `&from=${depositResult.senderAddress}` : ""}`;
+
+      setGeneratedLink({
+        url: claimUrl,
+        id: escContractId,
+        txHash: depositResult.txHash,
+        details: {
+          creatorAddress: depositResult.senderAddress,
+          token,
+          amount: parseFloat(amount),
+          usdEquivalent: parseFloat(usdValue),
+          recipient: recipient.trim() || "Anyone with link",
+          title: title.trim() || "Escrow Agreement",
+          releaseCondition,
+          timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
+          inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
+          createdAt: new Date().toISOString(),
+        },
+      });
+
+      sonnerToast.success("Soroban escrow deposit submitted & link generated!");
+    } catch (err) {
+      console.error("Escrow deposit error:", err);
+      const msg = err?.message || "Failed to submit deposit transaction to Soroban smart contract.";
+      sonnerToast.error(msg);
+    } finally {
       setIsGenerating(false);
-      sonnerToast.success("Escrow link generated successfully!");
-    }, 600);
+      setTxStatusMsg("");
+    }
   };
 
   const handleCopyLink = () => {
@@ -280,7 +306,7 @@ export default function CreateEscrow({ address }) {
             >
               {isGenerating ? (
                 <>
-                  <span className="spinner"></span> Generating Link...
+                  <span className="spinner"></span> {txStatusMsg || "Processing Soroban Deposit..."}
                 </>
               ) : (
                 <>
