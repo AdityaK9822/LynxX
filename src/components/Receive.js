@@ -1,146 +1,308 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 import QRCode from "react-qr-code";
-import { Copy, CheckCircle2, AlertCircle } from "lucide-react";
+import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import mainBG from "../media/mainBG.png";
+import ribbonBG from "../media/ribbon.png";
 
 export default function Receive({ address }) {
     const [copied, setCopied] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const qrWrapperRef = useRef(null);
 
     const handleCopy = () => {
         if (!address) return;
         navigator.clipboard.writeText(address);
         setCopied(true);
-        toast.success("Address copied to clipboard!");
+        toast.success("Address copied to clipboard");
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleDownloadQR = () => {
+        if (!address || !qrWrapperRef.current) return;
+        
+        setIsDownloading(true);
+
+        try {
+            const svgElement = qrWrapperRef.current.querySelector("svg");
+            if (!svgElement) {
+                toast.error("QR Code element not found.");
+                setIsDownloading(false);
+                return;
+            }
+
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+            const URL = window.URL || window.webkitURL || window;
+            const blobURL = URL.createObjectURL(svgBlob);
+
+const image = new window.Image();
+            image.onload = () => {
+                const canvas = document.createElement("canvas");
+                const padding = 40;
+                const size = 500;
+                canvas.width = size + padding * 2;
+                canvas.height = size + padding * 2;
+
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(image, padding, padding, size, size);
+
+                    const pngUrl = canvas.toDataURL("image/png");
+                    const downloadLink = document.createElement("a");
+                    const shortAddr = address.length > 10 ? `${address.slice(0, 6)}_${address.slice(-4)}` : "wallet";
+                    downloadLink.href = pngUrl;
+                    downloadLink.download = `lynxx-qr-${shortAddr}.png`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    URL.revokeObjectURL(blobURL);
+
+                    toast.success("QR Code downloaded as PNG");
+                }
+                setIsDownloading(false);
+            };
+
+            image.onerror = () => {
+                toast.error("Failed to generate QR image");
+                setIsDownloading(false);
+            };
+
+            image.src = blobURL;
+        } catch (err) {
+            console.error("QR download error:", err);
+            toast.error("Could not download QR Code");
+            setIsDownloading(false);
+        }
     };
 
     if (!address) {
         return (
-            <div className="receive-container" style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '500', marginBottom: '24px', color: '#fff' }}>Receive Funds</h2>
-                <div className="empty-state" style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <AlertCircle size={48} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: '16px', display: 'inline-block' }} />
-                    <h3 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '8px' }}>No wallet connected</h3>
-                    <p style={{ color: 'rgba(255,255,255,0.6)' }}>Connect your wallet to see your receive address and QR code.</p>
+            <div className="receive-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
+                <h1 className="escrow-title" style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '8px' }}>Receive</h1>
+                <div className="escrow-card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <p className="text-muted" style={{ fontSize: '0.95rem', margin: 0 }}>
+                        Connect your wallet to view receive address and QR code.
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="receive-container" style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: '500', marginBottom: '24px', color: '#fff' }}>Receive Funds</h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-                
-                {/* Card 1: QR Code */}
-                <div className="receive-card" style={{
-                    padding: '32px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(10px)'
-                }}>
-                    <div style={{
-                        background: '#fff',
-                        padding: '16px',
-                        borderRadius: '16px',
-                        marginBottom: '24px',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
-                    }}>
-                        <QRCode
-                            value={address}
-                            size={200}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                            viewBox={`0 0 256 256`}
-                        />
-                    </div>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem', textAlign: 'center', margin: 0 }}>
-                        Scan this QR code to receive payments.
-                    </p>
-                </div>
+        <div className="receive-wrapper-outer" style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 16px' }}>
+            {/* Outer Glassmorphic Section with 3D Wavy Fluid Ribbon Image (ribbon.png) */}
+            <div 
+                className="receive-section-hero" 
+                style={{
+                    position: 'relative',
+                    borderRadius: '28px',
+                    padding: '36px 32px',
+                    background: 'radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(5, 6, 10, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    overflow: 'hidden'
+                }}
+            >
+                {/* 3D Wavy Fluid Ribbon Background Image */}
+                <Image
+                    src={ribbonBG}
+                    alt="LynxX 3D Wavy Ribbon Background"
+                    fill
+                    priority
+                    aria-hidden="true"
+                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.4, pointerEvents: 'none', zIndex: 0 }}
+                />
 
-                {/* Card 2: Address Details */}
-                <div className="receive-card" style={{
-                    padding: '32px',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(10px)'
-                }}>
-                    <h3 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '16px', fontWeight: '500' }}>Your Stellar Address</h3>
-                    
-                    <div style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        padding: '16px',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                        marginBottom: '24px',
-                        wordBreak: 'break-all',
-                        fontFamily: 'monospace',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        fontSize: '0.9rem',
-                        lineHeight: '1.5'
-                    }}>
-                        {address}
-                    </div>
-
-                    <button 
-                        onClick={handleCopy}
-                        className={`btn ${copied ? 'btn-glass-primary' : 'btn-primary'}`}
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            padding: '12px',
-                            borderRadius: '12px',
-                            fontSize: '1rem',
-                            transition: 'all 0.2s',
-                            background: copied ? 'rgba(34, 197, 94, 0.2)' : 'var(--primary)',
-                            color: copied ? '#22c55e' : '#000',
-                            border: copied ? '1px solid rgba(34, 197, 94, 0.5)' : 'none',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {copied ? (
-                            <>
-                                <CheckCircle2 size={18} /> Copied!
-                            </>
-                        ) : (
-                            <>
-                                <Copy size={18} /> Copy Address
-                            </>
-                        )}
-                    </button>
-
-                    <div style={{
-                        marginTop: '24px',
-                        padding: '16px',
-                        background: 'rgba(234, 179, 8, 0.1)',
-                        border: '1px solid rgba(234, 179, 8, 0.2)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '12px'
-                    }}>
-                        <AlertCircle size={20} color="#eab308" style={{ flexShrink: 0, marginTop: '2px' }} />
-                        <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.85rem', margin: 0, lineHeight: '1.5' }}>
-                            <strong style={{ color: '#eab308' }}>Important:</strong> Send only Stellar (XLM) or supported Stellar network assets to this address. Sending other assets may result in permanent loss.
+                {/* Header */}
+                <div style={{ position: 'relative', zIndex: 2, marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 className="escrow-title" style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '6px', color: '#fff' }}>
+                            Receive Funds
+                        </h1>
+                        <p className="text-muted" style={{ fontSize: '0.9rem', margin: 0 }}>
+                            Scan QR code or copy address to receive payments.
                         </p>
                     </div>
+                    <a
+                        href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-glass-secondary text-xs"
+                        style={{ padding: '8px 14px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        <span>Explorer</span>
+                        <ExternalLink size={13} />
+                    </a>
                 </div>
 
+                {/* Glassmorphism Cards Content Grid */}
+                <div style={{ position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+                    
+                    {/* Left Glass Card: Framed QR Code */}
+                    <div 
+                        className="receive-glass-card" 
+                        style={{
+                            padding: '28px',
+                            background: 'rgba(10, 11, 16, 0.75)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: '24px',
+                            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}
+                    >
+                        {/* Framed QR Box with mainBG Wavy Image & Radiant Overlay */}
+                        <div 
+                            ref={qrWrapperRef}
+                            className="qr-frame-box"
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: '30px 20px',
+                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.22) 50%, rgba(99, 102, 241, 0.15) 100%)',
+                                border: '1px solid rgba(168, 85, 247, 0.4)',
+                                borderRadius: '22px',
+                                transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                                cursor: 'pointer',
+                                marginBottom: '20px',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {/* Inner 3D Wavy Glass Background Image for QR Box */}
+                            <Image
+                                src={mainBG}
+                                alt="LynxX QR Box Background"
+                                fill
+                                aria-hidden="true"
+                                style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.45, pointerEvents: 'none' }}
+                            />
+
+                            {/* Vibrant Radial Ambient Glow Overlay */}
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 80%)',
+                                pointerEvents: 'none'
+                            }} />
+
+                            {/* Crisp White QR Stage */}
+                            <div style={{
+                                position: 'relative',
+                                zIndex: 2,
+                                background: '#ffffff',
+                                padding: '18px',
+                                borderRadius: '18px',
+                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(56, 189, 248, 0.3)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)'
+                            }}>
+                                <QRCode
+                                    id="receive-qr-svg"
+                                    value={address}
+                                    size={190}
+                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                    viewBox={`0 0 256 256`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Primary Gradient Download Button */}
+                        <button
+                            id="btn-download-qr"
+                            type="button"
+                            onClick={handleDownloadQR}
+                            disabled={isDownloading}
+                            className="btn btn-gradient btn-full"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem' }}
+                        >
+                            <Download size={16} />
+                            <span>{isDownloading ? "Generating..." : "Download QR Code"}</span>
+                        </button>
+                    </div>
+
+                    {/* Right Glass Card: Address Details & Actions */}
+                    <div 
+                        className="receive-glass-card" 
+                        style={{
+                            padding: '28px',
+                            background: 'rgba(10, 11, 16, 0.75)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: '24px',
+                            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}
+                    >
+                        <div>
+                            <label className="escrow-field-label" style={{ marginBottom: '12px', display: 'block' }}>
+                                <span>Stellar Public Address</span>
+                            </label>
+
+                            {/* Input Wrap Address Display */}
+                            <div className="send-input-wrap mb-20" style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.5)', borderRadius: '14px', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                                <p style={{
+                                    fontFamily: 'monospace',
+                                    color: '#38bdf8',
+                                    fontSize: '0.88rem',
+                                    wordBreak: 'break-all',
+                                    margin: 0,
+                                    lineHeight: '1.6'
+                                }}>
+                                    {address}
+                                </p>
+                            </div>
+
+                            {/* Copy Button */}
+                            <button 
+                                id="btn-copy-receive-address"
+                                type="button"
+                                onClick={handleCopy}
+                                className={`btn ${copied ? 'btn-glass-secondary' : 'btn-gradient'} btn-full`}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem', marginBottom: '24px' }}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check size={16} className="text-emerald-400" />
+                                        <span>Copied to Clipboard</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy size={16} />
+                                        <span>Copy Address</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Minimal Warning Footer */}
+                        <div style={{
+                            padding: '14px 16px',
+                            background: 'rgba(234, 179, 8, 0.06)',
+                            border: '1px solid rgba(234, 179, 8, 0.18)',
+                            borderRadius: '14px'
+                        }}>
+                            <p className="text-muted text-xs" style={{ margin: 0, lineHeight: '1.5' }}>
+                                <strong style={{ color: '#eab308' }}>Note:</strong> Send only Stellar (XLM) or supported assets on Testnet to this public address.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
