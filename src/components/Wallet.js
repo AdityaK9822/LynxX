@@ -12,11 +12,13 @@ export class WalletError extends Error {
     }
 }
 
-// Initialize the kit with all supported default wallets
-StellarWalletsKit.init({
-    network: Networks.TESTNET,
-    modules: defaultModules(),
-});
+// Initialize the kit with all supported default wallets in browser environment
+if (typeof window !== "undefined") {
+    StellarWalletsKit.init({
+        network: Networks.TESTNET,
+        modules: defaultModules(),
+    });
+}
 
 export const kit = StellarWalletsKit;
 

@@ -1,23 +1,12 @@
 [workspace]
-resolver = "2"
 members = [
-  "contracts/*",
+    "contracts/badge",
+    "contracts/escrow",
+    "contracts/factory",
+    "contracts/fund",
+    "contracts/subscription-allowance",
 ]
+resolver = "2"
 
 [workspace.dependencies]
-soroban-sdk = "26"
-
-[profile.release]
-opt-level = "z"
-overflow-checks = true
-debug = 0
-strip = "symbols"
-debug-assertions = false
-panic = "abort"
-codegen-units = 1
-lto = true
-
-# For more information about this profile see https://developers.stellar.org/docs/build/smart-contracts/example-contracts/logging#cargotoml-profile
-[profile.release-with-logs]
-inherits = "release"
-debug-assertions = true
+soroban-sdk = { version = "21.0.0", features = ["alloc"] }
