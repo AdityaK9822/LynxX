@@ -80,6 +80,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if transaction is already a FeeBumpTransaction
+    if (transaction instanceof StellarSdk.FeeBumpTransaction) {
+      return NextResponse.json(
+        { error: 'Transaction is already a fee bump transaction' },
+        { status: 400 }
+      );
+    }
+
     // Build fee bump transaction - fee must be a string
     const feeBumpTx = StellarSdk.TransactionBuilder.buildFeeBumpTransaction(
       relayerKeypair,
