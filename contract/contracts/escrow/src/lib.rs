@@ -2,7 +2,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, Env};
 
 /// Status enum representing the escrow lifecycle state machine on Soroban:
-/// - `Deposit`: Initial deposit initialized in contract
+/// - `Deposit`: Funds deposited into the contract
 /// - `Locked`: Funds locked under release/timelock condition
 /// - `Released`: Escrowed funds released to recipient
 /// - `Refunded`: Escrowed funds refunded back to depositor
