@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Account, TransactionBuilder, Networks, Contract } from "@stellar/stellar-sdk";
+import { Account } from "@stellar/stellar-sdk";
 import { 
   DEFAULT_ESCROW_CONTRACT_ID, 
   SOROBAN_RPC_URL, 
@@ -8,27 +8,14 @@ import {
   submitEscrowRelease,
   servers
 } from "../lib/escrowContract";
+import { kit } from "../components/Wallet";
 
 const TEST_PUBLIC_KEY = "GDDYMQKZNWBIMY67MCNRPBBZQAHSQABQTK42UXY7RRKHUGINXFMREFJI";
-
-// Generate a valid XDR for tests
-function getValidTxXdr() {
-  const dummyAcc = new Account(TEST_PUBLIC_KEY, "100");
-  const contract = new Contract(DEFAULT_ESCROW_CONTRACT_ID);
-  const tx = new TransactionBuilder(dummyAcc, {
-    fee: "100",
-    networkPassphrase: Networks.TESTNET,
-  })
-    .addOperation(contract.call("deposit"))
-    .setTimeout(30)
-    .build();
-  return tx.toXDR();
-}
 
 // Mock Wallet module
 vi.mock("../components/Wallet", () => ({
   kit: {
-    signTransaction: vi.fn().mockImplementation(async (xdr) => ({ signedTxXdr: xdr })),
+    signTransaction: vi.fn(),
   },
   connectWallet: vi.fn().mockImplementation(async () => TEST_PUBLIC_KEY),
 }));
@@ -36,6 +23,7 @@ vi.mock("../components/Wallet", () => ({
 describe("escrowContract Service", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    kit.signTransaction.mockImplementation(async (xdr) => ({ signedTxXdr: xdr }));
   });
 
   it("exports correct default contract ID and URLs", () => {
@@ -44,18 +32,19 @@ describe("escrowContract Service", () => {
     expect(HORIZON_URL).toBe("https://horizon-testnet.stellar.org");
   });
 
-  it("throws error when deposit is invoked with unfunded account", async () => {
+  it("throws error when deposit is invoked with unfunded account after failed friendbot auto-fund", async () => {
     const mockHorizon = {
       loadAccount: vi.fn().mockRejectedValue(new Error("Account not found")),
     };
     vi.spyOn(servers, "getHorizonServer").mockReturnValue(mockHorizon);
+    global.fetch = vi.fn().mockRejectedValue(new Error("Friendbot unavailable"));
 
     await expect(
       submitEscrowDeposit({
         senderAddress: TEST_PUBLIC_KEY,
         amount: 10,
       })
-    ).rejects.toThrow(/is not funded on Stellar Testnet/);
+    ).rejects.toThrow(/is unfunded on Testnet/);
   });
 
   it("submits deposit transaction successfully when account is funded", async () => {
