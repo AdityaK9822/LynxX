@@ -11,6 +11,7 @@ import {
   Check, 
   Sparkles, 
   ArrowRight, 
+  ArrowUpRight,
   Info, 
   RefreshCw 
 } from "lucide-react";
@@ -386,6 +387,20 @@ export default function CreateEscrow({ address }) {
                     {generatedLink.details.recipient}
                   </span>
                 </div>
+                {generatedLink.txHash && (
+                  <div className="summary-row">
+                    <span className="summary-label">Soroban Tx Hash</span>
+                    <a
+                      href={`https://stellar.expert/explorer/testnet/tx/${generatedLink.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="summary-value text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1"
+                    >
+                      {generatedLink.txHash.slice(0, 6)}...{generatedLink.txHash.slice(-4)}
+                      <ArrowUpRight size={12} />
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="escrow-card-actions">
