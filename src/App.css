@@ -2403,6 +2403,13 @@ body {
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
+.qr-frame-box:hover {
+    border-color: rgba(168, 85, 247, 0.5) !important;
+    background: rgba(168, 85, 247, 0.05) !important;
+    box-shadow: 0 12px 36px rgba(168, 85, 247, 0.2), 0 0 20px rgba(56, 189, 248, 0.15) !important;
+    transform: translateY(-4px) !important;
+}
+
 .escrow-amount-row {
     display: flex;
     gap: 12px;
