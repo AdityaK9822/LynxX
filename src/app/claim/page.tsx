@@ -14,7 +14,8 @@ import {
   Wallet,
   Lock,
   CheckCircle2,
-  FileCheck
+  FileCheck,
+  ShieldCheck
 } from "lucide-react";
 
 import logoImg from "../../media/LynxX.png";
@@ -131,7 +132,17 @@ function ClaimContent() {
       <main className="claim-main-content relative z-10 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {isValidLink ? (
           /* Valid Escrow Claim Card with Dark Glass Opacity for Effortless Readability */
-          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-[#0a0b10]/90 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
+          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-[#0a0b10]/95 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
+            {/* Soroban Protocol Header Badge */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
+                <ShieldCheck size={14} className="text-cyan-400" />
+                <span>Soroban Smart Escrow</span>
+              </div>
+              <span className="text-[11px] font-mono text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2.5 py-0.5 rounded-full">
+                Stellar Testnet
+              </span>
+            </div>
             {/* Sender Pill */}
             {fromAddress && (
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full bg-white/[0.06] border border-white/15 text-xs">
