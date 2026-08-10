@@ -17,6 +17,23 @@ export const servers = {
 };
 
 /**
+ * Request Testnet XLM funds from Stellar Friendbot for an account
+ */
+export async function fundWithFriendbot(address) {
+  try {
+    const url = `https://friendbot.stellar.org/?addr=${encodeURIComponent(address)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Friendbot failed with status ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("Friendbot funding error:", err);
+    throw new Error(`Friendbot auto-fund failed for ${address.slice(0, 6)}...${address.slice(-4)}. Please visit https://faucet.stellar.org.`);
+  }
+}
+
+/**
  * Submit an escrow deposit transaction to Soroban RPC
  * @param {Object} params
  * @param {string} [params.senderAddress]
@@ -58,15 +75,24 @@ export async function submitEscrowDeposit({
     const horizonServer = servers.getHorizonServer();
     const rpcServer = servers.getRpcServer();
 
-    // 2. Fetch sender account sequence
+    // 2. Fetch sender account sequence with auto-Friendbot funding on Testnet
     onStateChange({ step: "simulating", message: "Preparing Soroban deposit transaction..." });
     let account;
     try {
       account = await horizonServer.loadAccount(activeAddress);
     } catch (err) {
-      throw new Error(
-        `Account ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)} is not funded on Stellar Testnet. Please fund account via Friendbot.`
-      );
+      // Auto-attempt Friendbot funding on Testnet if account is unfunded
+      onStateChange({ step: "funding", message: "Account unfunded. Funding via Stellar Friendbot..." });
+      try {
+        await fundWithFriendbot(activeAddress);
+        // Wait 1.5s for ledger indexing
+        await new Promise((res) => setTimeout(res, 1500));
+        account = await horizonServer.loadAccount(activeAddress);
+      } catch (fundErr) {
+        throw new Error(
+          `Account ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)} is unfunded on Testnet. Click 'Fund with Friendbot' to request testnet XLM.`
+        );
+      }
     }
 
     // 3. Construct Contract deposit invocation
@@ -198,15 +224,22 @@ export async function submitEscrowRelease({
     const horizonServer = servers.getHorizonServer();
     const rpcServer = servers.getRpcServer();
 
-    // 2. Fetch recipient account sequence
+    // 2. Fetch recipient account sequence with auto-Friendbot funding
     onStateChange({ step: "simulating", message: "Preparing Soroban release transaction..." });
     let account;
     try {
       account = await horizonServer.loadAccount(activeAddress);
     } catch (err) {
-      throw new Error(
-        `Account ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)} is not funded on Stellar Testnet. Please fund account via Friendbot.`
-      );
+      onStateChange({ step: "funding", message: "Account unfunded. Funding via Stellar Friendbot..." });
+      try {
+        await fundWithFriendbot(activeAddress);
+        await new Promise((res) => setTimeout(res, 1500));
+        account = await horizonServer.loadAccount(activeAddress);
+      } catch (fundErr) {
+        throw new Error(
+          `Account ${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)} is unfunded on Testnet. Click 'Fund with Friendbot' to request testnet XLM.`
+        );
+      }
     }
 
     // 3. Construct Contract release invocation
