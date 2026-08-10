@@ -39,7 +39,7 @@ export default function Receive({ address }) {
             const URL = window.URL || window.webkitURL || window;
             const blobURL = URL.createObjectURL(svgBlob);
 
-            const image = new Image();
+const image = new window.Image();
             image.onload = () => {
                 const canvas = document.createElement("canvas");
                 const padding = 40;
