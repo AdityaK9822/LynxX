@@ -219,6 +219,17 @@ function ClaimContent() {
                   <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
                     <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
                   </p>
+                  {isClaiming && (
+                    <div className="mt-4 p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between text-xs text-purple-200 animate-pulse">
+                      <div className="flex items-center gap-2.5">
+                        <span className="spinner w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></span>
+                        <span className="font-mono text-purple-300 font-medium">{claimStatusMsg}</span>
+                      </div>
+                      <span className="text-[10px] font-mono uppercase bg-purple-500/20 px-2 py-0.5 rounded text-purple-200 border border-purple-500/30">
+                        Soroban RPC
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
