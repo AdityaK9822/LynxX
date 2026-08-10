@@ -69,10 +69,10 @@ export async function POST(request: NextRequest) {
       ? StellarSdk.Networks.PUBLIC 
       : StellarSdk.Networks.TESTNET;
 
-    // Parse XDR
-    let envelope;
+    // Parse XDR - use TransactionBuilder.fromXDR to get a Transaction object
+    let transaction;
     try {
-      envelope = StellarSdk.xdr.TransactionEnvelope.fromXDR(innerTxXdr, 'base64');
+      transaction = StellarSdk.TransactionBuilder.fromXDR(innerTxXdr, passphrase);
     } catch (err) {
       return NextResponse.json(
         { error: 'Invalid XDR format' },
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const feeBumpTx = StellarSdk.TransactionBuilder.buildFeeBumpTransaction(
       relayerKeypair,
       '100',
-      envelope,
+      transaction,
       passphrase
     );
 
