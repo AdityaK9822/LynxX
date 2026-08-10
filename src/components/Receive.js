@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import QRCode from "react-qr-code";
-import { Copy, Check, Download, ExternalLink, ShieldCheck } from "lucide-react";
+import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import mainBG from "../media/mainBG.png";
 
@@ -108,14 +108,14 @@ export default function Receive({ address }) {
                     overflow: 'hidden'
                 }}
             >
-                {/* 3D Fluid Glass Theme Background Image */}
+                {/* 3D Fluid Glass Hero Section Background Image */}
                 <Image
                     src={mainBG}
-                    alt="LynxX 3D Background"
+                    alt="LynxX 3D Section Background"
                     fill
                     priority
                     aria-hidden="true"
-                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.3, pointerEvents: 'none', zIndex: 0 }}
+                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.28, pointerEvents: 'none', zIndex: 0 }}
                 />
 
                 {/* Header */}
@@ -160,7 +160,7 @@ export default function Receive({ address }) {
                             justifyContent: 'space-between'
                         }}
                     >
-                        {/* Framed QR Box */}
+                        {/* Framed QR Box with Dedicated Image & Vibrant Gradient Overlay */}
                         <div 
                             ref={qrWrapperRef}
                             className="qr-frame-box"
@@ -170,20 +170,42 @@ export default function Receive({ address }) {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                padding: '24px',
-                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.2) 100%)',
+                                padding: '30px 20px',
+                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.22) 50%, rgba(99, 102, 241, 0.15) 100%)',
                                 border: '1px solid rgba(168, 85, 247, 0.4)',
-                                borderRadius: '20px',
+                                borderRadius: '22px',
                                 transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                                 cursor: 'pointer',
-                                marginBottom: '20px'
+                                marginBottom: '20px',
+                                overflow: 'hidden'
                             }}
                         >
+                            {/* Inner 3D Glass Background Image for QR Div */}
+                            <Image
+                                src={mainBG}
+                                alt="LynxX QR Box Background"
+                                fill
+                                aria-hidden="true"
+                                style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.45, pointerEvents: 'none' }}
+                            />
+
+                            {/* Vibrant Radial Ambient Glow Overlay */}
                             <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.3) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 80%)',
+                                pointerEvents: 'none'
+                            }} />
+
+                            {/* Crisp White QR Stage */}
+                            <div style={{
+                                position: 'relative',
+                                zIndex: 2,
                                 background: '#ffffff',
-                                padding: '16px',
-                                borderRadius: '16px',
-                                boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.3)'
+                                padding: '18px',
+                                borderRadius: '18px',
+                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(56, 189, 248, 0.3)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)'
                             }}>
                                 <QRCode
                                     id="receive-qr-svg"
