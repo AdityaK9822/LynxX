@@ -6,6 +6,7 @@ import QRCode from "react-qr-code";
 import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import mainBG from "../media/mainBG.png";
+import landPhoto from "../media/landphoto.png";
 
 export default function Receive({ address }) {
     const [copied, setCopied] = useState(false);
@@ -95,27 +96,27 @@ export default function Receive({ address }) {
 
     return (
         <div className="receive-wrapper-outer" style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 16px' }}>
-            {/* Outer Glassmorphic Background Section with 3D Fluid BG Image */}
+            {/* Outer Glassmorphic Section with 3D Glass Hero Image (landphoto.png) */}
             <div 
                 className="receive-section-hero" 
                 style={{
                     position: 'relative',
                     borderRadius: '28px',
                     padding: '36px 32px',
-                    background: 'radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(5, 6, 10, 0.95) 100%)',
+                    background: 'radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.18) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(5, 6, 10, 0.95) 100%)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
                     overflow: 'hidden'
                 }}
             >
-                {/* 3D Fluid Glass Hero Section Background Image */}
+                {/* 3D Glass Hero Background Image */}
                 <Image
-                    src={mainBG}
-                    alt="LynxX 3D Section Background"
+                    src={landPhoto}
+                    alt="LynxX 3D Hero Background"
                     fill
                     priority
                     aria-hidden="true"
-                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.28, pointerEvents: 'none', zIndex: 0 }}
+                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.35, pointerEvents: 'none', zIndex: 0 }}
                 />
 
                 {/* Header */}
@@ -160,7 +161,7 @@ export default function Receive({ address }) {
                             justifyContent: 'space-between'
                         }}
                     >
-                        {/* Framed QR Box with Dedicated Image & Vibrant Gradient Overlay */}
+                        {/* Framed QR Box with mainBG Image & Radiant Overlay */}
                         <div 
                             ref={qrWrapperRef}
                             className="qr-frame-box"
