@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import QRCode from "react-qr-code";
 import { Copy, Check, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import mainBG from "../media/mainBG.png";
 
 export default function Receive({ address }) {
     const [copied, setCopied] = useState(false);
@@ -118,32 +120,55 @@ export default function Receive({ address }) {
             {/* Content Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                 
-                {/* Left Card: QR Code with Framed Hover Container */}
+                {/* Left Card: QR Code with Framed Background Theme Container */}
                 <div className="escrow-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
                     
-                    {/* Framed QR Box */}
+                    {/* Colorful Theme Framed QR Box */}
                     <div 
                         ref={qrWrapperRef}
                         className="qr-frame-box"
                         style={{
+                            position: 'relative',
                             width: '100%',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            padding: '24px',
-                            background: 'rgba(255, 255, 255, 0.02)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            borderRadius: '20px',
-                            transition: 'all 0.3s ease',
+                            padding: '32px 24px',
+                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(99, 102, 241, 0.12) 100%)',
+                            border: '1px solid rgba(168, 85, 247, 0.35)',
+                            borderRadius: '22px',
+                            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                             cursor: 'pointer',
-                            marginBottom: '20px'
+                            marginBottom: '20px',
+                            overflow: 'hidden'
                         }}
                     >
+                        {/* 3D Fluid Glass Theme Background Image */}
+                        <Image
+                            src={mainBG}
+                            alt="LynxX 3D Background"
+                            fill
+                            aria-hidden="true"
+                            style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.4, pointerEvents: 'none' }}
+                        />
+
+                        {/* Colorful Ambient Glow Overlay */}
                         <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.25) 0%, rgba(168, 85, 247, 0.2) 60%, transparent 80%)',
+                            pointerEvents: 'none'
+                        }} />
+
+                        {/* Clean White QR Stage */}
+                        <div style={{
+                            position: 'relative',
+                            zIndex: 2,
                             background: '#ffffff',
-                            padding: '16px',
-                            borderRadius: '16px',
-                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
+                            padding: '18px',
+                            borderRadius: '18px',
+                            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.25)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)'
                         }}>
                             <QRCode
                                 id="receive-qr-svg"
