@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import QRCode from "react-qr-code";
-import { Copy, Check, Download, ExternalLink } from "lucide-react";
+import { Copy, Check, Download, ExternalLink, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import mainBG from "../media/mainBG.png";
 
@@ -94,162 +94,192 @@ export default function Receive({ address }) {
     }
 
     return (
-        <div className="receive-container" style={{ maxWidth: '840px', margin: '0 auto', padding: '40px 20px' }}>
-            {/* Minimal Header */}
-            <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h1 className="escrow-title" style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '6px', color: '#fff' }}>
-                        Receive Funds
-                    </h1>
-                    <p className="text-muted" style={{ fontSize: '0.9rem', margin: 0 }}>
-                        Scan QR code or copy address to receive payments.
-                    </p>
-                </div>
-                <a
-                    href={`https://stellar.expert/explorer/testnet/account/${address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-glass-secondary text-xs"
-                    style={{ padding: '8px 14px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                    <span>Explorer</span>
-                    <ExternalLink size={13} />
-                </a>
-            </div>
+        <div className="receive-wrapper-outer" style={{ maxWidth: '900px', margin: '0 auto', padding: '24px 16px' }}>
+            {/* Outer Glassmorphic Background Section with 3D Fluid BG Image */}
+            <div 
+                className="receive-section-hero" 
+                style={{
+                    position: 'relative',
+                    borderRadius: '28px',
+                    padding: '36px 32px',
+                    background: 'radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.15) 50%, rgba(5, 6, 10, 0.95) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    overflow: 'hidden'
+                }}
+            >
+                {/* 3D Fluid Glass Theme Background Image */}
+                <Image
+                    src={mainBG}
+                    alt="LynxX 3D Background"
+                    fill
+                    priority
+                    aria-hidden="true"
+                    style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.3, pointerEvents: 'none', zIndex: 0 }}
+                />
 
-            {/* Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-                
-                {/* Left Card: QR Code with Framed Background Theme Container */}
-                <div className="escrow-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* Header */}
+                <div style={{ position: 'relative', zIndex: 2, marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 className="escrow-title" style={{ fontSize: '1.8rem', fontWeight: '600', marginBottom: '6px', color: '#fff' }}>
+                            Receive Funds
+                        </h1>
+                        <p className="text-muted" style={{ fontSize: '0.9rem', margin: 0 }}>
+                            Scan QR code or copy address to receive payments.
+                        </p>
+                    </div>
+                    <a
+                        href={`https://stellar.expert/explorer/testnet/account/${address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-glass-secondary text-xs"
+                        style={{ padding: '8px 14px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        <span>Explorer</span>
+                        <ExternalLink size={13} />
+                    </a>
+                </div>
+
+                {/* Glassmorphism Cards Content Grid */}
+                <div style={{ position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
                     
-                    {/* Colorful Theme Framed QR Box */}
+                    {/* Left Glass Card: Framed QR Code */}
                     <div 
-                        ref={qrWrapperRef}
-                        className="qr-frame-box"
+                        className="receive-glass-card" 
                         style={{
-                            position: 'relative',
-                            width: '100%',
+                            padding: '28px',
+                            background: 'rgba(10, 11, 16, 0.75)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: '24px',
+                            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65)',
                             display: 'flex',
-                            justifyContent: 'center',
+                            flexDirection: 'column',
                             alignItems: 'center',
-                            padding: '32px 24px',
-                            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(168, 85, 247, 0.18) 50%, rgba(99, 102, 241, 0.12) 100%)',
-                            border: '1px solid rgba(168, 85, 247, 0.35)',
-                            borderRadius: '22px',
-                            transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                            cursor: 'pointer',
-                            marginBottom: '20px',
-                            overflow: 'hidden'
+                            justifyContent: 'space-between'
                         }}
                     >
-                        {/* 3D Fluid Glass Theme Background Image */}
-                        <Image
-                            src={mainBG}
-                            alt="LynxX 3D Background"
-                            fill
-                            aria-hidden="true"
-                            style={{ objectFit: 'cover', objectPosition: 'center', opacity: 0.4, pointerEvents: 'none' }}
-                        />
-
-                        {/* Colorful Ambient Glow Overlay */}
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: 'radial-gradient(circle at center, rgba(56, 189, 248, 0.25) 0%, rgba(168, 85, 247, 0.2) 60%, transparent 80%)',
-                            pointerEvents: 'none'
-                        }} />
-
-                        {/* Clean White QR Stage */}
-                        <div style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            background: '#ffffff',
-                            padding: '18px',
-                            borderRadius: '18px',
-                            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.25)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)'
-                        }}>
-                            <QRCode
-                                id="receive-qr-svg"
-                                value={address}
-                                size={190}
-                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                viewBox={`0 0 256 256`}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Primary Gradient Download Button */}
-                    <button
-                        id="btn-download-qr"
-                        type="button"
-                        onClick={handleDownloadQR}
-                        disabled={isDownloading}
-                        className="btn btn-gradient btn-full"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem' }}
-                    >
-                        <Download size={16} />
-                        <span>{isDownloading ? "Generating..." : "Download QR Code"}</span>
-                    </button>
-                </div>
-
-                {/* Right Card: Address & Actions */}
-                <div className="escrow-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                        <label className="escrow-field-label" style={{ marginBottom: '12px', display: 'block' }}>
-                            <span>Stellar Public Address</span>
-                        </label>
-
-                        {/* Input Wrap Address Display */}
-                        <div className="send-input-wrap mb-20" style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <p style={{
-                                fontFamily: 'monospace',
-                                color: '#38bdf8',
-                                fontSize: '0.88rem',
-                                wordBreak: 'break-all',
-                                margin: 0,
-                                lineHeight: '1.6'
-                            }}>
-                                {address}
-                            </p>
-                        </div>
-
-                        {/* Copy Button */}
-                        <button 
-                            id="btn-copy-receive-address"
-                            type="button"
-                            onClick={handleCopy}
-                            className={`btn ${copied ? 'btn-glass-secondary' : 'btn-gradient'} btn-full`}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem', marginBottom: '24px' }}
+                        {/* Framed QR Box */}
+                        <div 
+                            ref={qrWrapperRef}
+                            className="qr-frame-box"
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: '24px',
+                                background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(168, 85, 247, 0.2) 100%)',
+                                border: '1px solid rgba(168, 85, 247, 0.4)',
+                                borderRadius: '20px',
+                                transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                                cursor: 'pointer',
+                                marginBottom: '20px'
+                            }}
                         >
-                            {copied ? (
-                                <>
-                                    <Check size={16} className="text-emerald-400" />
-                                    <span>Copied to Clipboard</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Copy size={16} />
-                                    <span>Copy Address</span>
-                                </>
-                            )}
+                            <div style={{
+                                background: '#ffffff',
+                                padding: '16px',
+                                borderRadius: '16px',
+                                boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.3)'
+                            }}>
+                                <QRCode
+                                    id="receive-qr-svg"
+                                    value={address}
+                                    size={190}
+                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                    viewBox={`0 0 256 256`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Primary Gradient Download Button */}
+                        <button
+                            id="btn-download-qr"
+                            type="button"
+                            onClick={handleDownloadQR}
+                            disabled={isDownloading}
+                            className="btn btn-gradient btn-full"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem' }}
+                        >
+                            <Download size={16} />
+                            <span>{isDownloading ? "Generating..." : "Download QR Code"}</span>
                         </button>
                     </div>
 
-                    {/* Minimal Warning Footer */}
-                    <div style={{
-                        padding: '14px 16px',
-                        background: 'rgba(234, 179, 8, 0.05)',
-                        border: '1px solid rgba(234, 179, 8, 0.15)',
-                        borderRadius: '14px'
-                    }}>
-                        <p className="text-muted text-xs" style={{ margin: 0, lineHeight: '1.5' }}>
-                            <strong style={{ color: '#eab308' }}>Note:</strong> Send only Stellar (XLM) or supported assets on Testnet to this public address.
-                        </p>
-                    </div>
-                </div>
+                    {/* Right Glass Card: Address Details & Actions */}
+                    <div 
+                        className="receive-glass-card" 
+                        style={{
+                            padding: '28px',
+                            background: 'rgba(10, 11, 16, 0.75)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            borderRadius: '24px',
+                            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.65)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between'
+                        }}
+                    >
+                        <div>
+                            <label className="escrow-field-label" style={{ marginBottom: '12px', display: 'block' }}>
+                                <span>Stellar Public Address</span>
+                            </label>
 
+                            {/* Input Wrap Address Display */}
+                            <div className="send-input-wrap mb-20" style={{ padding: '14px 16px', background: 'rgba(0,0,0,0.5)', borderRadius: '14px', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                                <p style={{
+                                    fontFamily: 'monospace',
+                                    color: '#38bdf8',
+                                    fontSize: '0.88rem',
+                                    wordBreak: 'break-all',
+                                    margin: 0,
+                                    lineHeight: '1.6'
+                                }}>
+                                    {address}
+                                </p>
+                            </div>
+
+                            {/* Copy Button */}
+                            <button 
+                                id="btn-copy-receive-address"
+                                type="button"
+                                onClick={handleCopy}
+                                className={`btn ${copied ? 'btn-glass-secondary' : 'btn-gradient'} btn-full`}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', fontSize: '0.9rem', marginBottom: '24px' }}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check size={16} className="text-emerald-400" />
+                                        <span>Copied to Clipboard</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy size={16} />
+                                        <span>Copy Address</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Minimal Warning Footer */}
+                        <div style={{
+                            padding: '14px 16px',
+                            background: 'rgba(234, 179, 8, 0.06)',
+                            border: '1px solid rgba(234, 179, 8, 0.18)',
+                            borderRadius: '14px'
+                        }}>
+                            <p className="text-muted text-xs" style={{ margin: 0, lineHeight: '1.5' }}>
+                                <strong style={{ color: '#eab308' }}>Note:</strong> Send only Stellar (XLM) or supported assets on Testnet to this public address.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
