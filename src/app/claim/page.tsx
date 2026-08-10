@@ -14,11 +14,13 @@ import {
   Wallet,
   Lock,
   CheckCircle2,
-  FileCheck
+  FileCheck,
+  ShieldCheck
 } from "lucide-react";
 
 import logoImg from "../../media/LynxX.png";
 import mainBG from "../../media/mainBG.png";
+import { submitEscrowRelease, DEFAULT_ESCROW_CONTRACT_ID } from "../../lib/escrowContract";
 
 function ClaimContent() {
   const searchParams = useSearchParams();
@@ -35,6 +37,14 @@ function ClaimContent() {
   const isValidLink = isValidAmount && isValidContract;
 
   const [copied, setCopied] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimStatusMsg, setClaimStatusMsg] = useState("");
+  const [claimResult, setClaimResult] = useState<{
+    txHash: string;
+    claimedAt: string;
+    recipientAddress: string;
+    contractId: string;
+  } | null>(null);
 
   // Conversion rate for USD estimate display
   const rates: Record<string, number> = { USDC: 1.0, XLM: 0.328, EURC: 1.08 };
@@ -48,11 +58,36 @@ function ClaimContent() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleMockConnectClaim = () => {
-    sonnerToast.info(
-      "Wallet claiming integration will be enabled in the upcoming Soroban smart contract release.",
-      { duration: 4000 }
-    );
+  const handleConnectAndClaim = async () => {
+    if (isClaiming) return;
+    setIsClaiming(true);
+    setClaimStatusMsg("Initiating claim...");
+
+    try {
+      const result = await submitEscrowRelease({
+        contractId: contractId || DEFAULT_ESCROW_CONTRACT_ID,
+        onStateChange: (state) => {
+          if (state.message) setClaimStatusMsg(state.message);
+          if (state.step === "connecting") {
+            sonnerToast.info("Connecting Stellar wallet...");
+          } else if (state.step === "signing") {
+            sonnerToast.info("Please approve release transaction in your wallet.");
+          } else if (state.step === "submitting") {
+            sonnerToast.info("Submitting transaction to Soroban RPC...");
+          }
+        },
+      });
+
+      setClaimResult(result);
+      sonnerToast.success("Soroban release transaction confirmed! Funds unlocked.");
+    } catch (err: any) {
+      console.error("Escrow release error:", err);
+      const msg = err?.message || "Failed to submit release transaction to Soroban smart contract.";
+      sonnerToast.error(msg);
+    } finally {
+      setIsClaiming(false);
+      setClaimStatusMsg("");
+    }
   };
 
   const shortAddr = (addr: string) => 
@@ -97,7 +132,17 @@ function ClaimContent() {
       <main className="claim-main-content relative z-10 max-w-3xl w-full mx-auto px-4 py-8 flex-1 flex flex-col items-center justify-center">
         {isValidLink ? (
           /* Valid Escrow Claim Card with Dark Glass Opacity for Effortless Readability */
-          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-[#0a0b10]/90 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
+          <div className="bento-card claim-card w-full max-w-xl p-8 md:p-10 rounded-3xl bg-[#0a0b10]/95 border border-white/15 backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.95)]">
+            {/* Soroban Protocol Header Badge */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
+                <ShieldCheck size={14} className="text-cyan-400" />
+                <span>Soroban Smart Escrow</span>
+              </div>
+              <span className="text-[11px] font-mono text-purple-300 bg-purple-500/15 border border-purple-500/30 px-2.5 py-0.5 rounded-full">
+                Stellar Testnet
+              </span>
+            </div>
             {/* Sender Pill */}
             {fromAddress && (
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-6 rounded-full bg-white/[0.06] border border-white/15 text-xs">
@@ -136,21 +181,57 @@ function ClaimContent() {
               </div>
             </div>
 
-            {/* Upgraded Primary Claim Action Button */}
+            {/* Upgraded Primary Claim Action Button / Success Banner */}
             <div className="claim-action-wrap mb-8">
-              <button
-                id="btn-claim-wallet"
-                type="button"
-                className="claim-action-btn"
-                onClick={handleMockConnectClaim}
-              >
-                <Wallet size={20} />
-                <span>Connect Wallet to Claim</span>
-                <ArrowRight size={18} strokeWidth={2.5} />
-              </button>
-              <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
-                <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
-              </p>
+              {claimResult ? (
+                <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 size={22} className="text-emerald-400" />
+                    <h3 className="font-bold text-white text-base">Escrow Released Successfully!</h3>
+                  </div>
+                  <p className="text-xs text-slate-300 mb-4 leading-relaxed">
+                    Funds have been released from Soroban contract <span className="font-mono text-emerald-300">{shortAddr(claimResult.contractId)}</span> to your connected wallet address.
+                  </p>
+                  {claimResult.txHash && (
+                    <a
+                      href={`https://stellar.expert/explorer/testnet/tx/${claimResult.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-mono text-cyan-300 hover:underline"
+                    >
+                      View Tx on Stellar Explorer <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    id="btn-claim-wallet"
+                    type="button"
+                    className="claim-action-btn"
+                    onClick={handleConnectAndClaim}
+                    disabled={isClaiming}
+                  >
+                    <Wallet size={20} />
+                    <span>{isClaiming ? (claimStatusMsg || "Processing Release...") : "Connect Wallet to Claim"}</span>
+                    <ArrowRight size={18} strokeWidth={2.5} />
+                  </button>
+                  <p className="text-xs text-slate-300 text-center mt-3 flex items-center justify-center gap-1 font-medium">
+                    <Lock size={12} /> Non-custodial: Connect your Stellar wallet (Freighter / Albedo) to authorize release.
+                  </p>
+                  {isClaiming && (
+                    <div className="mt-4 p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between text-xs text-purple-200 animate-pulse">
+                      <div className="flex items-center gap-2.5">
+                        <span className="spinner w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></span>
+                        <span className="font-mono text-purple-300 font-medium">{claimStatusMsg}</span>
+                      </div>
+                      <span className="text-[10px] font-mono uppercase bg-purple-500/20 px-2 py-0.5 rounded text-purple-200 border border-purple-500/30">
+                        Soroban RPC
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Systematic How Claiming Works Section */}
