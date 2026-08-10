@@ -167,7 +167,7 @@ export default function CreateEscrow({ address }) {
               <label className="escrow-field-label">
                 <span>Deposit Token & Amount</span>
               </label>
-              <div className="escrow-amount-row">
+              <div className="escrow-amount-row mb-2">
                 <div className="send-input-wrap amount-wrap flex-1">
                   <input
                     id="escrow-amount-input"
@@ -179,7 +179,9 @@ export default function CreateEscrow({ address }) {
                     onChange={(e) => setAmount(e.target.value)}
                     required
                   />
-                  <span className="bento-usd-suffix">≈ ${usdValue} USD</span>
+                  <span className="bento-usd-suffix text-cyan-300 font-mono font-medium text-xs px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                    ≈ ${usdValue} USD
+                  </span>
                 </div>
 
                 <div className="escrow-token-selector">
@@ -194,6 +196,10 @@ export default function CreateEscrow({ address }) {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-muted px-1">
+                <span>Rate: 1 {token} ≈ ${tokenRates[token]} USD</span>
+                <span className="text-cyan-400/80 font-mono">Live Oracle Feed</span>
               </div>
             </div>
 
