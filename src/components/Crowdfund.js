@@ -108,7 +108,7 @@ export default function Crowdfund({ address = null, onDonated }) {
                 <div className="cf-metrics">
                     <div className="cf-metric">
                         <div className="cf-m-lbl">Raised</div>
-                        <div className="cf-m-val">{campaign ? `${fmt(campaign.raised)} XLM` : "..."}</div>
+                        <div className="cf-m-val">{campaign ? `${fmt(campaign.raisedXlm)} XLM` : "..."}</div>
                     </div>
                     <div className="cf-metric">
                         <div className="cf-m-lbl">Goal</div>
