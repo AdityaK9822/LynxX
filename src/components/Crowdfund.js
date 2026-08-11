@@ -34,15 +34,17 @@ export default function Crowdfund({ address = null, onDonated }) {
     const refresh = useCallback(async () => {
         try {
             const [c, r] = await Promise.all([getCampaign(), getRecentDonations()]);
-            if (!mounted.current) return;
+            if (!mounted.current) return null;
             setCampaign(c);
             setRecent(r);
             if (address) {
                 setMine(await getMyContribution(address));
                 setBadgeTier(await getBadgeTier(address));
             }
+            return c;
         } catch (e) {
             console.warn("campaign refresh failed:", e);
+            return null;
         }
     }, [address]);
 
@@ -66,9 +68,11 @@ export default function Crowdfund({ address = null, onDonated }) {
             setStatus("success");
             setAmount("");
 
-            await refresh();
+            // Retrieve updated campaign state directly from refresh promise to avoid React closure state lag
+            const updatedCampaign = await refresh();
+            const activeCampaign = updatedCampaign || campaign;
 
-            const isGoalReached = campaign ? (campaign.closed || campaign.progress >= 100) : false;
+            const isGoalReached = activeCampaign ? (activeCampaign.closed || activeCampaign.progress >= 100) : false;
             triggerDonationConfetti(isGoalReached);
 
             const newTier = await getBadgeTier(address);
@@ -88,6 +92,9 @@ export default function Crowdfund({ address = null, onDonated }) {
     };
 
     const pct = campaign ? campaign.progress : 0;
+    const raisedDisplay = campaign ? (campaign.raisedXlm ?? campaign.raised ?? 0) : 0;
+    const goalDisplay = campaign ? (campaign.goalXlm ?? campaign.target ?? 0) : 0;
+    const donorsDisplay = campaign ? (campaign.donorsCount ?? campaign.donors ?? 0) : "...";
 
     return (
         <div className="cf-panel">
@@ -108,15 +115,15 @@ export default function Crowdfund({ address = null, onDonated }) {
                 <div className="cf-metrics">
                     <div className="cf-metric">
                         <div className="cf-m-lbl">Raised</div>
-                        <div className="cf-m-val">{campaign ? `${fmt(campaign.raisedXlm)} XLM` : "..."}</div>
+                        <div className="cf-m-val">{campaign ? `${fmt(raisedDisplay)} XLM` : "..."}</div>
                     </div>
                     <div className="cf-metric">
                         <div className="cf-m-lbl">Goal</div>
-                        <div className="cf-m-val">{campaign ? `${fmt(campaign.target)} XLM` : "..."}</div>
+                        <div className="cf-m-val">{campaign ? `${fmt(goalDisplay)} XLM` : "..."}</div>
                     </div>
                     <div className="cf-metric">
                         <div className="cf-m-lbl">Donors</div>
-                        <div className="cf-m-val">{campaign ? campaign.donorsCount : "..."}</div>
+                        <div className="cf-m-val">{donorsDisplay}</div>
                     </div>
                 </div>
 
