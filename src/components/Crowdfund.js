@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ExternalLink } from "lucide-react";
+import { triggerDonationConfetti } from "../lib/confettiUtils";
 import {
     getCampaign,
     getMyContribution,
@@ -22,11 +23,8 @@ const fmt = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 
 export default function Crowdfund({ address = null, onDonated }) {
     const [campaign, setCampaign]   = useState(null);
     const [recent, setRecent]       = useState([]);
-    
     const [mine, setMine]           = useState(0);
-    
     const [badgeTier, setBadgeTier] = useState("None");
-
     const [amount, setAmount]       = useState("");
     const [status, setStatus]       = useState("idle"); // idle | pending | success | error
     const [hash, setHash]           = useState("");
@@ -39,10 +37,10 @@ export default function Crowdfund({ address = null, onDonated }) {
             if (!mounted.current) return;
             setCampaign(c);
             setRecent(r);
-           if (address) {
-    setMine(await getMyContribution(address));
-    setBadgeTier(await getBadgeTier(address));
-}
+            if (address) {
+                setMine(await getMyContribution(address));
+                setBadgeTier(await getBadgeTier(address));
+            }
         } catch (e) {
             console.warn("campaign refresh failed:", e);
         }
@@ -62,20 +60,24 @@ export default function Crowdfund({ address = null, onDonated }) {
         setErrorMsg("");
         try {
             const oldTier = await getBadgeTier(address);
+            const txHash = await donate(address, amount);
 
-const txHash = await donate(address, amount);
+            setHash(txHash);
+            setStatus("success");
+            setAmount("");
 
-setHash(txHash);
-setStatus("success");
-setAmount("");
+            await refresh();
 
-await refresh();
+            const isGoalReached = campaign ? (campaign.closed || campaign.progress >= 100) : false;
+            triggerDonationConfetti(isGoalReached);
 
-const newTier = await getBadgeTier(address);
+            const newTier = await getBadgeTier(address);
+            if (oldTier !== newTier) {
+                toast.success(`🎉 Congratulations! Your badge tier is now ${newTier}`);
+            } else {
+                toast.success("🎉 Thank you! Your donation was successfully recorded on-chain.");
+            }
 
-if (oldTier !== newTier) {
-   toast.success(`🎉 Congratulations! Your badge tier is now ${newTier}`);
-}
             onDonated?.();
         } catch (e) {
             setStatus("error");
@@ -101,118 +103,96 @@ if (oldTier !== newTier) {
                 )}
             </div>
 
-            {/* ── Progress ── */}
-            <div className="cf-progress-row">
-                <span className="cf-raised">
-                    {!campaign ? <div style={{ height: '2rem', width: '100px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', display: 'inline-block', animation: 'pulse 1.5s infinite' }} /> : fmt(campaign.raisedXlm)} 
-                    {campaign && <span className="cf-unit">XLM</span>}
-                </span>
-                <span className="cf-goal">
-                    {!campaign ? <div style={{ height: '1.2rem', width: '80px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '6px', display: 'inline-block', animation: 'pulse 1.5s infinite' }} /> : `of ${fmt(campaign.goalXlm)} goal`}
-                </span>
-            </div>
-            <div className="cf-bar">
-                <div className="cf-bar-fill" style={{ width: `${pct}%`, transition: 'width 1s ease-in-out' }} />
-            </div>
-            <div className="cf-meta">
-                <span>{!campaign ? <div style={{ height: '1rem', width: '60px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px', display: 'inline-block', animation: 'pulse 1.5s infinite' }} /> : `${pct.toFixed(1)}% funded`}</span>
-                <span>{!campaign ? <div style={{ height: '1rem', width: '60px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px', display: 'inline-block', animation: 'pulse 1.5s infinite' }} /> : `${campaign.donors} donor${campaign.donors === 1 ? "" : "s"}`}</span>
-            </div>
+            {/* Campaign Summary & Progress Bar */}
+            <div className="cf-body">
+                <div className="cf-metrics">
+                    <div className="cf-metric">
+                        <div className="cf-m-lbl">Raised</div>
+                        <div className="cf-m-val">{campaign ? `${fmt(campaign.raised)} XLM` : "..."}</div>
+                    </div>
+                    <div className="cf-metric">
+                        <div className="cf-m-lbl">Goal</div>
+                        <div className="cf-m-val">{campaign ? `${fmt(campaign.target)} XLM` : "..."}</div>
+                    </div>
+                    <div className="cf-metric">
+                        <div className="cf-m-lbl">Donors</div>
+                        <div className="cf-m-val">{campaign ? campaign.donorsCount : "..."}</div>
+                    </div>
+                </div>
 
-            {/* ── Donate form (only when a wallet is connected) ── */}
-            {address ? (
-                <>
-                    <div className="cf-donate">
-                        <div className="send-input-wrap">
-                            <span className="send-input-prefix">XLM</span>
+                <div className="cf-progress-track">
+                    <div className="cf-progress-fill" style={{ width: `${Math.min(pct, 100)}%` }} />
+                </div>
+                <div className="cf-progress-lbl">
+                    <span>{pct.toFixed(1)}% funded</span>
+                    {campaign?.closed && <span className="cf-goal-badge">🏆 Target Achieved</span>}
+                </div>
+
+                {/* Donation Form */}
+                {address ? (
+                    <div className="cf-donate-form" style={{ marginTop: "20px" }}>
+                        <div style={{ display: "flex", gap: "8px" }}>
                             <input
                                 type="number"
-                                placeholder="Amount to donate"
+                                placeholder="Amount in XLM"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 disabled={status === "pending" || campaign?.closed}
+                                className="input"
+                                style={{ flex: 1 }}
                             />
+                            <button
+                                onClick={handleDonate}
+                                disabled={status === "pending" || !amount || campaign?.closed}
+                                className="btn btn-primary"
+                            >
+                                {status === "pending" ? "Donating..." : "Donate XLM"}
+                            </button>
                         </div>
-                        <div className="cf-quick">
-                            {[5, 10, 25].map((v) => (
-                                <button key={v} className="cf-chip" disabled={campaign?.closed}
-                                    onClick={() => setAmount(String(v))}>+{v}</button>
+
+                        {mine > 0 && (
+                            <div className="cf-user-info" style={{ marginTop: "12px", fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
+                                Your Total Contribution: <strong>{fmt(mine)} XLM</strong> · Badge Tier: <span className="badge-chip">{badgeTier}</span>
+                            </div>
+                        )}
+
+                        {status === "success" && hash && (
+                            <div className="cf-status-success" style={{ marginTop: "12px", fontSize: "0.85rem", color: "#34d399" }}>
+                                Transaction confirmed!{" "}
+                                <a
+                                    href={`https://stellar.expert/explorer/testnet/tx/${hash}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ color: "#38bdf8", textDecoration: "underline" }}
+                                >
+                                    View Tx <ExternalLink size={12} style={{ display: "inline" }} />
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="cf-preview-note" style={{ marginTop: "16px", fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>
+                        Connect wallet to back this campaign on Stellar Testnet.
+                    </div>
+                )}
+
+                {/* Recent Donations Feed */}
+                {recent.length > 0 && (
+                    <div className="cf-recent-feed" style={{ marginTop: "24px" }}>
+                        <div style={{ fontSize: "0.85rem", fontWeight: "600", color: "#fff", marginBottom: "8px" }}>
+                            Recent Supporters
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            {recent.slice(0, 4).map((r, i) => (
+                                <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.03)", padding: "6px 12px", borderRadius: "8px" }}>
+                                    <span>{short(r.donor)}</span>
+                                    <span style={{ color: "#38bdf8", fontWeight: "600" }}>+{fmt(r.amount)} XLM</span>
+                                </div>
                             ))}
                         </div>
-                        <button
-                            className="btn btn-gradient btn-full"
-                            onClick={handleDonate}
-                            disabled={status === "pending" || campaign?.closed || !amount}
-                        >
-                            {status === "pending"
-                                ? <><span className="spinner" /> Confirming on-chain…</>
-                                : campaign?.closed ? "Campaign closed" : "Donate to campaign"}
-                        </button>
                     </div>
-
-                    {mine > 0 && (
-                        <div className="cf-mine">You've contributed <strong>{fmt(mine)} XLM</strong> to this campaign</div>
-                    )}
-                        {address && (
-    <div className="cf-badge">
-        Badge Tier: <strong>{badgeTier}</strong>
-    </div>
-)}
-                    {/* ── Transaction status ── */}
-                    {status !== "idle" && (
-                        <div className="cf-status">
-                            <div className={`status-badge ${
-                                status === "success" ? "status-badge-success"
-                                : status === "error" ? "status-badge-error"
-                                : "status-badge-pending"}`}>
-                                <span className="status-dot" />
-                                {status === "pending" && "Submitting to Soroban…"}
-                                {status === "success" && "Donation confirmed on-chain"}
-                                {status === "error" && (errorMsg || "Donation failed")}
-                            </div>
-                            {hash && (
-                                <div className="tx-hash-box flex flex-col gap-3 mt-4">
-                                    <div>
-                                        <div className="tx-hash-label mb-1">Transaction Hash</div>
-                                        <div className="tx-hash-value" style={{fontSize: '0.75rem', wordBreak: 'break-all'}}>{hash}</div>
-                                    </div>
-                                    <a 
-                                        href={`https://stellar.expert/explorer/testnet/tx/${hash}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="btn btn-glass-secondary flex items-center justify-center gap-2" 
-                                        style={{fontSize: '0.8rem', padding: '8px 16px', textDecoration: 'none', width: 'fit-content', borderRadius: '8px', cursor: 'pointer'}}
-                                    >
-                                        View on Explorer
-                                        <ExternalLink size={14} />
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </>
-            ) : (
-                <div className="cf-connect-note">Connect your wallet to donate to this on-chain campaign.</div>
-            )}
-
-            {/* ── Live activity feed from contract events ── */}
-            {recent.length > 0 && (
-                <div className="cf-activity">
-                    <div className="cf-activity-head">Live donations</div>
-                    {recent.map((d, i) => (
-                        <div className="cf-activity-row" key={i}>
-                            <span className="cf-activity-addr">{short(d.from)}</span>
-                            <span className="cf-activity-amt">+{fmt(d.amount)} XLM</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            <a className="cf-contract-link"
-                href={`https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}`}
-                target="_blank" rel="noreferrer">
-                Contract {short(CONTRACT_ID)} ↗
-            </a>
+                )}
+            </div>
         </div>
     );
 }
