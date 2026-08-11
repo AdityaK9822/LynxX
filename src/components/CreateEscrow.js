@@ -11,9 +11,12 @@ import {
   Check, 
   Sparkles, 
   ArrowRight, 
+  ArrowUpRight,
   Info, 
   RefreshCw 
 } from "lucide-react";
+
+import { submitEscrowDeposit, DEFAULT_ESCROW_CONTRACT_ID } from "../lib/escrowContract";
 
 export default function CreateEscrow({ address }) {
   const [token, setToken] = useState("USDC");
@@ -24,6 +27,7 @@ export default function CreateEscrow({ address }) {
   const [timelockDuration, setTimelockDuration] = useState("7"); // in days
   const [inspectionPeriod, setInspectionPeriod] = useState("2"); // in days
   const [isGenerating, setIsGenerating] = useState(false);
+  const [txStatusMsg, setTxStatusMsg] = useState("");
   const [generatedLink, setGeneratedLink] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +40,7 @@ export default function CreateEscrow({ address }) {
 
   const usdValue = amount && !isNaN(amount) ? (parseFloat(amount) * tokenRates[token]).toFixed(2) : "0.00";
 
-  const handleGenerateLink = (e) => {
+  const handleGenerateLink = async (e) => {
     e.preventDefault();
 
     if (!amount || parseFloat(amount) <= 0) {
@@ -45,39 +49,62 @@ export default function CreateEscrow({ address }) {
     }
 
     setIsGenerating(true);
+    setTxStatusMsg("Preparing Soroban deposit...");
 
-    const formState = {
-      creatorAddress: address || "Unconnected",
-      token,
-      amount: parseFloat(amount),
-      usdEquivalent: parseFloat(usdValue),
-      recipient: recipient.trim() || "Anyone with link",
-      title: title.trim() || "Escrow Agreement",
-      releaseCondition,
-      timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
-      inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Requirement: console.log the form state for now
-    console.log("Create Escrow Form State:", formState);
-
-    // Simulate mock link generation UI response
-    setTimeout(() => {
-      const mockId = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 8);
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
-      const mockContractId = `CCIYIE3WDF5EEC4DL25JR2O4SAV2G3USARIBMCLWPIFQVUOIVDEN5FWI`;
-      const fakeUrl = `${origin}/claim?c=${mockContractId}&amt=${amount}&token=${token}`;
-      
-      setGeneratedLink({
-        url: fakeUrl,
-        id: mockContractId,
-        details: formState,
+    try {
+      const depositResult = await submitEscrowDeposit({
+        senderAddress: address,
+        contractId: DEFAULT_ESCROW_CONTRACT_ID,
+        token,
+        amount: parseFloat(amount),
+        recipient: recipient.trim() || "Anyone with link",
+        title: title.trim() || "Escrow Agreement",
+        releaseCondition,
+        timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
+        inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
+        onStateChange: (state) => {
+          if (state.message) setTxStatusMsg(state.message);
+          if (state.step === "connecting") {
+            sonnerToast.info("Connecting Stellar wallet...");
+          } else if (state.step === "signing") {
+            sonnerToast.info("Please approve deposit in your wallet.");
+          } else if (state.step === "submitting") {
+            sonnerToast.info("Submitting transaction to Soroban RPC...");
+          }
+        },
       });
 
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://lynxx.app";
+      const escContractId = depositResult.contractId || DEFAULT_ESCROW_CONTRACT_ID;
+      const claimUrl = `${origin}/claim?c=${escContractId}&amt=${amount}&token=${token}${depositResult.senderAddress ? `&from=${depositResult.senderAddress}` : ""}`;
+
+      setGeneratedLink({
+        url: claimUrl,
+        id: escContractId,
+        txHash: depositResult.txHash,
+        details: {
+          creatorAddress: depositResult.senderAddress,
+          token,
+          amount: parseFloat(amount),
+          usdEquivalent: parseFloat(usdValue),
+          recipient: recipient.trim() || "Anyone with link",
+          title: title.trim() || "Escrow Agreement",
+          releaseCondition,
+          timelockDays: releaseCondition === "timelock" ? parseInt(timelockDuration, 10) : null,
+          inspectionDays: releaseCondition === "manual" ? parseInt(inspectionPeriod, 10) : null,
+          createdAt: new Date().toISOString(),
+        },
+      });
+
+      sonnerToast.success("Soroban escrow deposit submitted & link generated!");
+    } catch (err) {
+      console.error("Escrow deposit error:", err);
+      const msg = err?.message || "Failed to submit deposit transaction to Soroban smart contract.";
+      sonnerToast.error(msg);
+    } finally {
       setIsGenerating(false);
-      sonnerToast.success("Escrow link generated successfully!");
-    }, 600);
+      setTxStatusMsg("");
+    }
   };
 
   const handleCopyLink = () => {
@@ -141,7 +168,7 @@ export default function CreateEscrow({ address }) {
               <label className="escrow-field-label">
                 <span>Deposit Token & Amount</span>
               </label>
-              <div className="escrow-amount-row">
+              <div className="escrow-amount-row mb-2">
                 <div className="send-input-wrap amount-wrap flex-1">
                   <input
                     id="escrow-amount-input"
@@ -153,7 +180,9 @@ export default function CreateEscrow({ address }) {
                     onChange={(e) => setAmount(e.target.value)}
                     required
                   />
-                  <span className="bento-usd-suffix">≈ ${usdValue} USD</span>
+                  <span className="bento-usd-suffix text-cyan-300 font-mono font-medium text-xs px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                    ≈ ${usdValue} USD
+                  </span>
                 </div>
 
                 <div className="escrow-token-selector">
@@ -168,6 +197,10 @@ export default function CreateEscrow({ address }) {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="flex justify-between items-center text-[11px] text-muted px-1">
+                <span>Rate: 1 {token} ≈ ${tokenRates[token]} USD</span>
+                <span className="text-cyan-400/80 font-mono">Live Oracle Feed</span>
               </div>
             </div>
 
@@ -280,7 +313,7 @@ export default function CreateEscrow({ address }) {
             >
               {isGenerating ? (
                 <>
-                  <span className="spinner"></span> Generating Link...
+                  <span className="spinner"></span> {txStatusMsg || "Processing Soroban Deposit..."}
                 </>
               ) : (
                 <>
@@ -354,6 +387,20 @@ export default function CreateEscrow({ address }) {
                     {generatedLink.details.recipient}
                   </span>
                 </div>
+                {generatedLink.txHash && (
+                  <div className="summary-row">
+                    <span className="summary-label">Soroban Tx Hash</span>
+                    <a
+                      href={`https://stellar.expert/explorer/testnet/tx/${generatedLink.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="summary-value text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1"
+                    >
+                      {generatedLink.txHash.slice(0, 6)}...{generatedLink.txHash.slice(-4)}
+                      <ArrowUpRight size={12} />
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="escrow-card-actions">
@@ -376,40 +423,45 @@ export default function CreateEscrow({ address }) {
             </div>
           ) : (
             /* Explainer Side Card */
-            <div className="escrow-card info-side-card">
-              <div className="info-card-header mb-16">
-                <Lock size={28} className="text-purple-400 mb-8" />
-                <h3 className="text-lg font-semibold text-white">How Escrow Links Work</h3>
+            <div className="escrow-card info-side-card border border-purple-500/20 bg-gradient-to-b from-purple-950/20 to-black/40">
+              <div className="info-card-header mb-20 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                  <Lock size={20} className="text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white leading-snug">How Escrow Links Work</h3>
+                  <span className="text-[11px] text-purple-300/80 font-mono">Soroban Trustless Protocol</span>
+                </div>
               </div>
 
-              <ul className="escrow-steps-list">
-                <li>
-                  <div className="step-badge">1</div>
+              <ul className="escrow-steps-list space-y-4">
+                <li className="flex gap-3">
+                  <div className="step-badge w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold text-xs flex items-center justify-center flex-shrink-0">1</div>
                   <div>
-                    <h4 className="font-medium text-white text-sm">Set Terms & Amount</h4>
-                    <p className="text-xs text-muted">Choose your token amount and release condition (manual or time-locked).</p>
+                    <h4 className="font-semibold text-white text-sm">Set Terms & Amount</h4>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">Choose token amount and release condition (manual inspection or time-locked).</p>
                   </div>
                 </li>
-                <li>
-                  <div className="step-badge">2</div>
+                <li className="flex gap-3">
+                  <div className="step-badge w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-bold text-xs flex items-center justify-center flex-shrink-0">2</div>
                   <div>
-                    <h4 className="font-medium text-white text-sm">Share Escrow Link</h4>
-                    <p className="text-xs text-muted">Send the unique URL to your freelancer, buyer, or trading partner.</p>
+                    <h4 className="font-semibold text-white text-sm">Share Escrow Link</h4>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">Send the unique link to your counterparty to commence work or trade.</p>
                   </div>
                 </li>
-                <li>
-                  <div className="step-badge">3</div>
+                <li className="flex gap-3">
+                  <div className="step-badge w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center flex-shrink-0">3</div>
                   <div>
-                    <h4 className="font-medium text-white text-sm">Lock & Release</h4>
-                    <p className="text-xs text-muted">Funds are held safely in a Soroban smart contract until conditions are met.</p>
+                    <h4 className="font-semibold text-white text-sm">Lock & Authorize Release</h4>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">Funds remain safely locked in Soroban smart contracts until authorized for payout.</p>
                   </div>
                 </li>
               </ul>
 
-              <div className="escrow-security-note mt-20">
-                <Info size={16} className="text-cyan-400 flex-shrink-0" />
-                <span className="text-xs text-muted">
-                  Non-custodial: funds are stored directly in Soroban contracts with zero intermediary access.
+              <div className="escrow-security-note mt-6 p-3.5 rounded-xl bg-black/60 border border-white/10 flex items-start gap-2.5">
+                <ShieldCheck size={18} className="text-cyan-400 flex-shrink-0 mt-0.5" />
+                <span className="text-xs text-slate-300 leading-relaxed">
+                  <strong className="text-white font-medium">Non-custodial:</strong> Funds are locked directly in WASM smart contract state with zero intermediary access.
                 </span>
               </div>
             </div>

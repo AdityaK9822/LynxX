@@ -7,10 +7,20 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    environmentOptions: {
+      jsdom: {
+        url: 'http://localhost',
+      },
+    },
     setupFiles: './src/setupTests.js',
     css: true,
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'packages/**',
+    ],
   },
 });

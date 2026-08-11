@@ -36,7 +36,7 @@ const MultiChainSwap  = dynamic(() => import("./motion/swap").then(m => ({ defau
 const UserInteractions = dynamic(() => import("./UserInteractions"), { ssr: false });
 const FeedbackForm     = dynamic(() => import("./FeedbackForm"),     { ssr: false });
 const CreateEscrow     = dynamic(() => import("./CreateEscrow"),     { ssr: false });
-const CashTagSettings  = dynamic(() => import("./CashTagSettings"),  { ssr: false });
+const PasskeySection   = dynamic(() => import("./PasskeySection"),   { ssr: false });
 
 // ── Image imports (used as src strings for Next.js <Image> / CSS) ──
 import mainBG       from "../media/mainBG.png";
@@ -390,6 +390,7 @@ function Header() {
                             <span className="cf-nav-link" onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' }), 50); }}>Features</span>
                             <span className="cf-nav-link" onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }), 50); }}>How it works</span>
                             <span className="cf-nav-link" onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('campaign')?.scrollIntoView({ behavior: 'smooth' }), 50); }}>Crowdfund</span>
+                            <span className="cf-nav-link" onClick={() => { setActiveView('home'); setTimeout(() => document.getElementById('passkey-onboarding')?.scrollIntoView({ behavior: 'smooth' }), 50); }}>Passkeys</span>
                             <span className={`cf-nav-link ${activeView === 'analytics' ? 'cf-nav-active' : ''}`} onClick={() => { setActiveView('analytics'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Analytics</span>
                             <Link href="/docs" className="cf-nav-link" style={{ textDecoration: 'none' }}>Docs</Link>
                         </div>
@@ -578,6 +579,18 @@ function Header() {
                             <div className="lp-campaign-point"><CheckIcon /> Progress streams live from contract events</div>
                             <div className="lp-campaign-point"><CheckIcon /> Verifiable on the public ledger</div>
                         </div>
+                    </Reveal>
+                </div>
+            </section>
+
+            {/* ── Seedless Onboarding & Device Key Generation (Passkeys) ── */}
+            <section id="passkey-onboarding" style={{ padding: '80px 4%', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
+                    <Reveal>
+                        <div className="lp-section-eyebrow">Seedless Security</div>
+                        <h2 className="lp-section-title" style={{ marginBottom: '16px' }}>Biometric &amp; Hardware Passkeys</h2>
+                        <p className="lp-faq-sub" style={{ marginBottom: '36px' }}>No seed phrases to memorize or lose. Generate your cryptographic Device Key using your phone or laptop&apos;s Secure Enclave.</p>
+                        <PasskeySection />
                     </Reveal>
                 </div>
             </section>
@@ -839,6 +852,7 @@ function Header() {
 
                 {/* Dashboard Grid */}
                 {activeView === 'send' ? (
+                    <ErrorBoundary>
                     <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', position: 'relative', flexShrink: 0 }}>
                         {/* Right-side ribbon background */}
                         <Image 
@@ -926,6 +940,7 @@ function Header() {
                             )}
                         </div>
                     </div>
+                    </ErrorBoundary>
                 ) : activeView === 'escrow' ? (
                     <ErrorBoundary message="Could not load Escrow view. Try again.">
                         <CreateEscrow address={address} />
@@ -935,13 +950,9 @@ function Header() {
                         <MultiChainSwap />
                     </div>
                 ) : activeView === 'activity' ? (
-                    <ErrorBoundary message="Could not load Activity view. Try again.">
-                        <Activity address={address} />
-                    </ErrorBoundary>
+                    <ErrorBoundary><Activity address={address} /></ErrorBoundary>
                 ) : activeView === 'receive' ? (
-                    <ErrorBoundary message="Could not load Receive view. Try again.">
-                        <Receive address={address} />
-                    </ErrorBoundary>
+                    <ErrorBoundary><Receive address={address} /></ErrorBoundary>
                 ) : activeView === 'analytics' ? (
                     <MarketAnalytics />
                 ) : activeView === 'settings' ? (
@@ -949,8 +960,8 @@ function Header() {
                         <CashTagSettings address={address} setToast={setToast} />
                     </ErrorBoundary>
                 ) : (
-                <ErrorBoundary message="Could not load Dashboard. Try again.">
-                    <div className="bento-grid">
+                <ErrorBoundary>
+                <div className="bento-grid">
                     {/* Column 1 */}
                     <div className="bento-col bento-col-1">
                         {/* Total Balance */}
